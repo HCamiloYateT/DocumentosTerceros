@@ -2,13 +2,34 @@
   padding: 14px 10px 70px;
 }
 
-.documentos-user,
-.documentos-date {
+.documentos-user {
   align-items: center;
   display: flex;
   gap: 8px;
   min-height: 48px;
   padding: 0 10px;
+}
+
+.documentos-user .shiny-html-output {
+  align-items: center;
+  color: #6c757d;
+  display: inline-flex;
+  font-size: 12pt;
+  gap: 7px;
+}
+
+.documentos-usuario-nombre,
+.documentos-usuario-separador {
+  color: #6c757d;
+  font-size: 12pt;
+  font-weight: 400;
+}
+
+.documentos-user .rf-status-badge {
+  background: #e9ecef;
+  border-color: #ced4da;
+  color: #6c757d;
+  font-size: 12pt;
 }
 
 .documentos-actions {
