@@ -1,11 +1,17 @@
 # Funciones del módulo Inicio ----
-.inicio_formatear_porcentaje <- function(valor) {
-  tags$span(paste0(formatC(valor, format = "f", digits = 1, decimal.mark = ","), "%"))
-}
-
 .inicio_porcentaje <- function(condicion) {
   if (!length(condicion)) return(0)
   round(100 * sum(condicion, na.rm = TRUE) / length(condicion), 1)
+}
+
+.inicio_indicador <- function(condicion) {
+  list(cantidad = sum(condicion, na.rm = TRUE), porcentaje = .inicio_porcentaje(condicion))
+}
+
+.inicio_formatear_indicador <- function(valor) {
+  cantidad <- formatC(valor$cantidad, format = "f", digits = 0, big.mark = ".", decimal.mark = ",")
+  porcentaje <- formatC(valor$porcentaje, format = "f", digits = 1, decimal.mark = ",")
+  tags$span(cantidad, tags$small(paste0(" · ", porcentaje, "%")))
 }
 
 .inicio_datos_tabla <- function(solicitudes) {

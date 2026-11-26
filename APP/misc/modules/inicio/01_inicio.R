@@ -5,13 +5,17 @@ InicioUI <- function(id) {
     tags$div(
       class = "documentos-cajas-row",
       fluidRow(
-        column(3, cajaValor_ui(ns("enviadas"), icono = "paper-plane", texto = "Enviadas",
+        column(2, cajaValor_ui(ns("creadas"), icono = "folder-plus", texto = "Creadas",
                                mostrar_boton = FALSE, compact = TRUE)),
-        column(3, cajaValor_ui(ns("abiertas"), icono = "link", texto = "Abiertas",
+        column(2, cajaValor_ui(ns("enviadas"), icono = "paper-plane", texto = "Enviadas",
                                mostrar_boton = FALSE, compact = TRUE)),
-        column(3, cajaValor_ui(ns("completas"), icono = "circle-check", texto = "Completas",
+        column(2, cajaValor_ui(ns("pendientes"), icono = "hourglass-half", texto = "Pendientes",
                                mostrar_boton = FALSE, compact = TRUE)),
-        column(3, cajaValor_ui(ns("vencidas"), icono = "clock", texto = "Vencidas",
+        column(2, cajaValor_ui(ns("abiertas"), icono = "link", texto = "Abiertas",
+                               mostrar_boton = FALSE, compact = TRUE)),
+        column(2, cajaValor_ui(ns("completas"), icono = "circle-check", texto = "Completas",
+                               mostrar_boton = FALSE, compact = TRUE)),
+        column(2, cajaValor_ui(ns("vencidas"), icono = "clock", texto = "Vencidas",
                                mostrar_boton = FALSE, compact = TRUE))
       )
     ),
@@ -32,20 +36,26 @@ InicioServer <- function(id, recarga, usuario) {
 
     datos_tabla <- reactive(.inicio_datos_tabla(solicitudes()))
 
+    cajaValor_server("creadas", reactive({
+      .inicio_indicador(rep(TRUE, nrow(solicitudes())))
+    }), "numero", formatear = .inicio_formatear_indicador)
     cajaValor_server("enviadas", reactive({
-      .inicio_porcentaje(!is.na(solicitudes()$EnviadoEn))
-    }), "numero", formatear = .inicio_formatear_porcentaje)
+      .inicio_indicador(!is.na(solicitudes()$EnviadoEn))
+    }), "numero", formatear = .inicio_formatear_indicador)
+    cajaValor_server("pendientes", reactive({
+      .inicio_indicador(!solicitudes()$CanalPrincipal %in% c("CORREO", "QR"))
+    }), "numero", formatear = .inicio_formatear_indicador)
     cajaValor_server("abiertas", reactive({
-      .inicio_porcentaje(solicitudes()$TotalAperturas > 0)
-    }), "numero", formatear = .inicio_formatear_porcentaje)
+      .inicio_indicador(solicitudes()$TotalAperturas > 0)
+    }), "numero", formatear = .inicio_formatear_indicador)
     cajaValor_server("completas", reactive({
-      .inicio_porcentaje(solicitudes()$PorcentajeCompletitud >= 100)
-    }), "numero", formatear = .inicio_formatear_porcentaje)
+      .inicio_indicador(solicitudes()$PorcentajeCompletitud >= 100)
+    }), "numero", formatear = .inicio_formatear_indicador)
     cajaValor_server("vencidas", reactive({
       datos <- solicitudes()
-      .inicio_porcentaje(!is.na(datos$VenceEn) & datos$VenceEn < as.POSIXct(Sys.time(), tz = "UTC") &
-                           datos$PorcentajeCompletitud < 100)
-    }), "numero", formatear = .inicio_formatear_porcentaje)
+      .inicio_indicador(!is.na(datos$VenceEn) & datos$VenceEn < as.POSIXct(Sys.time(), tz = "UTC") &
+                          datos$PorcentajeCompletitud < 100)
+    }), "numero", formatear = .inicio_formatear_indicador)
 
     TablaVancouver(
       "tabla", data = datos_tabla, page_size = 10, nombre_archivo = "estado_solicitudes",
