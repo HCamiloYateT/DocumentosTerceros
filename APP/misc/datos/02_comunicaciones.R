@@ -13,8 +13,10 @@ ConstruirEnlaceSolicitud <- function(codigo_solicitud) {
 }
 
 RegistrarComunicacionSolicitud <- function(codigo_solicitud, destinatario, asunto, estado, usuario,
-                                           detalle = "") {
+                                           detalle = "", canal = "CORREO") {
   codigo_solicitud <- .ValidarCodigoRuta(codigo_solicitud, "código de solicitud")
+  canal <- toupper(trimws(as.character(canal)[1L]))
+  if (!canal %in% c("CORREO", "ENLACE", "QR")) stop("Canal de comunicación no válido.", call. = FALSE)
   ruta <- file.path(.RutaSolicitud(codigo_solicitud), "comunicaciones", "eventos.rds")
   .ConBloqueo(paste0("comunicacion_", codigo_solicitud), {
     eventos <- .LeerRDS(ruta, function() tibble::tibble(
@@ -23,7 +25,7 @@ RegistrarComunicacionSolicitud <- function(codigo_solicitud, destinatario, asunt
       RegistradoEn = as.POSIXct(character(), tz = "UTC"), RegistradoPor = character()
     ))
     fila <- tibble::tibble(
-      CodigoSolicitud = codigo_solicitud, Canal = "CORREO",
+      CodigoSolicitud = codigo_solicitud, Canal = canal,
       Destinatario = tolower(trimws(destinatario)), Asunto = asunto,
       Estado = estado, Detalle = detalle,
       RegistradoEn = as.POSIXct(Sys.time(), tz = "UTC"), RegistradoPor = usuario
