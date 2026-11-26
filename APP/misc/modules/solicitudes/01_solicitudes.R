@@ -4,55 +4,74 @@ SolicitudesUI <- function(id) {
   shiny::tagList(
     racafeForms::racafePanel(
       "Nueva solicitud",
-      shiny::fluidRow(
-        shiny::column(2, shiny::selectInput(ns("tipo_persona"), "Tipo de persona",
-                                            choices = c("Jurídica" = "JURIDICA", "Natural" = "NATURAL"))),
-        shiny::column(2, shiny::selectInput(ns("tipo_identificacion"), "Tipo de identificación",
-                                            choices = c("NIT", "CC", "CE", "PASAPORTE"))),
-        shiny::column(2, shiny::textInput(ns("numero_identificacion"), "Número de identificación")),
-        shiny::column(1, shiny::textInput(ns("digito_verificacion"), "DV")),
-        shiny::column(5, shiny::textInput(ns("nombre_razon_social"), "Nombre o razón social"))
-      ),
-      shiny::fluidRow(
-        shiny::column(3, shiny::textInput(ns("nombre_contacto"), "Nombre del contacto")),
-        shiny::column(3, shiny::textInput(ns("correo_contacto"), "Correo del contacto")),
-        shiny::column(2, shiny::textInput(ns("telefono"), "Teléfono")),
-        shiny::column(2, shiny::selectInput(ns("tipo_tercero"), "Tipo de tercero",
-                                            choices = c("Proveedor", "Cliente", "Contratista", "Otro"))),
-        shiny::column(2, shiny::textInput(ns("pais"), "País", value = "CO"))
-      ),
-      shiny::fluidRow(
-        shiny::column(3, shiny::textInput(ns("ciudad"), "Ciudad")),
-        shiny::column(3, shiny::selectInput(ns("tipo_proceso"), "Proceso",
-                                            choices = c("Vinculación" = "VINCULACION",
-                                                        "Actualización" = "ACTUALIZACION"))),
-        shiny::column(3, shiny::textInput(ns("responsable"), "Responsable")),
-        shiny::column(3, shiny::checkboxGroupInput(
-          ns("requisitos"), "Requisitos",
-          choices = c("RUT" = "DOC_RUT", "CERL" = "DOC_CERL", "Habeas Data" = "FORM_HABEAS"),
-          selected = .REQUISITOS_BASE$CodigoRequisito
-        ))
-      ),
-      shiny::fluidRow(
-        shiny::column(9, shiny::textAreaInput(ns("observaciones"), "Observaciones", width = "100%", rows = 2)),
-        shiny::column(3, class = "documentos-actions",
-                      racafeShiny::Boton(ns("crear"), "Crear solicitud", icono = "folder-plus"))
+      racafeForms::racafeForm(
+        id = "nueva_solicitud", ns = ns, variant = "plain",
+        racafeForms::racafeFormRow(
+          columns = 4, responsive = "auto",
+          racafeForms::racafeInputSelect("tipo_persona", "Tipo de persona",
+                                         choices = c("Jurídica" = "JURIDICA", "Natural" = "NATURAL"),
+                                         selected = "JURIDICA", empty = FALSE, ns = ns),
+          racafeForms::racafeInputSelect("tipo_identificacion", "Tipo de identificación",
+                                         choices = c("NIT", "CC", "CE", "PASAPORTE"), selected = "NIT",
+                                         empty = FALSE, ns = ns),
+          racafeForms::racafeInputText("numero_identificacion", "Número de identificación", required = TRUE,
+                                       ns = ns),
+          racafeForms::racafeInputText("digito_verificacion", "DV", ns = ns)
+        ),
+        racafeForms::racafeFormRow(
+          columns = 3, responsive = "auto",
+          racafeForms::racafeInputText("nombre_razon_social", "Nombre o razón social", required = TRUE, ns = ns),
+          racafeForms::racafeInputSelect("tipo_tercero", "Tipo de tercero",
+                                         choices = c("Proveedor", "Cliente", "Contratista", "Otro"),
+                                         selected = "Proveedor", empty = FALSE, ns = ns),
+          racafeForms::racafeInputText("responsable", "Responsable", required = TRUE, ns = ns)
+        ),
+        racafeForms::racafeFormRow(
+          columns = 4, responsive = "auto",
+          racafeForms::racafeInputText("nombre_contacto", "Nombre del contacto", required = TRUE, ns = ns),
+          racafeForms::racafeInputText("correo_contacto", "Correo del contacto", type = "email",
+                                       required = TRUE, ns = ns),
+          racafeForms::racafeInputText("telefono", "Teléfono", type = "tel", ns = ns),
+          racafeForms::racafeInputText("pais", "País", value = "CO", ns = ns)
+        ),
+        racafeForms::racafeFormRow(
+          columns = 3, responsive = "auto",
+          racafeForms::racafeInputText("ciudad", "Ciudad", ns = ns),
+          racafeForms::racafeInputSelect("tipo_proceso", "Proceso",
+                                         choices = c("Vinculación" = "VINCULACION",
+                                                     "Actualización" = "ACTUALIZACION"),
+                                         selected = "VINCULACION", empty = FALSE, ns = ns),
+          racafeForms::racafeInputSelect(
+            "requisitos", "Requisitos",
+            choices = c("RUT" = "DOC_RUT", "CERL" = "DOC_CERL", "Habeas Data" = "FORM_HABEAS"),
+            selected = .REQUISITOS_BASE$CodigoRequisito, multiple = TRUE, empty = FALSE, ns = ns,
+            gender = "m"
+          )
+        ),
+        racafeForms::racafeInputTextArea("observaciones", "Observaciones", rows = 2, ns = ns),
+        racafeForms::racafeFormFooter(
+          racafeForms::racafeButton("crear", "Crear solicitud", icon = "folder-plus", ns = ns)
+        )
       )
     ),
     racafeForms::racafePanel(
       "Registrar envío",
-      shiny::fluidRow(
-        shiny::column(5, shiny::selectInput(ns("solicitud_envio"), "Solicitud", choices = character())),
-        shiny::column(3, shiny::numericInput(ns("vigencia"), "Vigencia en días",
-                                             value = DOCUMENTOS_VIGENCIA_DIAS, min = 1, max = 30)),
-        shiny::column(4, class = "documentos-actions",
-                      racafeShiny::Boton(ns("registrar_envio"), "Registrar envío", icono = "paper-plane"))
+      racafeForms::racafeForm(
+        id = "registrar_envio_form", ns = ns, variant = "plain",
+        racafeForms::racafeFormRow(
+          columns = 2, responsive = "auto",
+          racafeForms::racafeInputSelect("solicitud_envio", "Solicitud", choices = character(), ns = ns),
+          racafeForms::racafeInputNumeric("vigencia", "Vigencia en días", value = DOCUMENTOS_VIGENCIA_DIAS,
+                                          format = "integer", min = 1, max = 30, ns = ns)
+        ),
+        racafeForms::racafeFormFooter(
+          racafeForms::racafeButton("registrar_envio", "Registrar envío", icon = "paper-plane", ns = ns)
+        )
       )
     ),
     racafeForms::racafePanel("Solicitudes", reactable::reactableOutput(ns("tabla")))
   )
 }
-
 SolicitudesServer <- function(id, usuario, recarga) {
   shiny::moduleServer(id, function(input, output, session) {
     local_trigger <- shiny::reactiveVal(0L)
@@ -67,7 +86,7 @@ SolicitudesServer <- function(id, usuario, recarga) {
       datos <- solicitudes()
       choices <- stats::setNames(datos$CodigoSolicitud,
                                  paste(datos$CodigoSolicitud, datos$Estado, sep = " · "))
-      shiny::updateSelectInput(session, "solicitud_envio", choices = choices)
+      racafeForms::racafeUpdateSelect(session, "solicitud_envio", choices = choices)
     })
 
     shiny::observeEvent(input$crear, {
