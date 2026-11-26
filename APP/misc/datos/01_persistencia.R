@@ -207,9 +207,11 @@ RegistrarEnvioSolicitud <- function(codigo_solicitud, usuario, vigencia_dias = D
     i <- match(codigo_solicitud, solicitudes$CodigoSolicitud)
     if (is.na(i)) stop("La solicitud no existe.", call. = FALSE)
     ahora <- as.POSIXct(Sys.time(), tz = "UTC")
-    solicitudes$EnviadoEn[i] <- ahora
-    solicitudes$VenceEn[i] <- ahora + as.difftime(vigencia_dias, units = "days")
-    solicitudes$Estado[i] <- "ENVIADA"
+    if (is.na(solicitudes$EnviadoEn[i])) {
+      solicitudes$EnviadoEn[i] <- ahora
+      solicitudes$VenceEn[i] <- ahora + as.difftime(vigencia_dias, units = "days")
+      solicitudes$Estado[i] <- "ENVIADA"
+    }
     solicitudes$UltimaActividadEn[i] <- ahora
     .EscribirRDSAtomico(solicitudes, file.path(.RUTAS_DOCUMENTOS$indices, "solicitudes.rds"))
     .EscribirRDSAtomico(solicitudes[i, ], file.path(.RutaSolicitud(codigo_solicitud), "solicitud.rds"))
