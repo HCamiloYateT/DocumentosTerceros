@@ -18,12 +18,17 @@
   tags$span(formatC(valor$cantidad, format = "f", digits = 0, big.mark = ".", decimal.mark = ","))
 }
 
+.inicio_formatear_fecha <- function(fecha) {
+  format(fecha, "%d/%m/%Y %H:%M:%S", tz = "America/Bogota")
+}
+
 .inicio_datos_tabla <- function(solicitudes) {
   terceros <- ListarTerceros() %>%
     transmute(CodigoTercero, NIT = if_else(TipoIdentificacion == "NIT", NumeroIdentificacion, NA_character_),
               RazonSocial = NombreRazonSocial)
   solicitudes %>%
     left_join(terceros, by = "CodigoTercero") %>%
+    mutate(across(c(CreadoEn, EnviadoEn, AbiertoEn, VenceEn), .inicio_formatear_fecha)) %>%
     select(CodigoSolicitud, CodigoTercero, NIT, RazonSocial, CreadoPor, CreadoEn, CanalPrincipal, EnviadoEn,
            AbiertoEn, TotalAperturas, Estado, VenceEn, PorcentajeCompletitud)
 }
@@ -98,7 +103,7 @@
 .inicio_cronologia_ui <- function(seleccion, ns) {
   solicitud <- seleccion$data
   cronologia <- ListarCronologiaSolicitud(solicitud$CodigoSolicitud) %>%
-    mutate(Fecha = format(Fecha, "%d/%m/%Y %I:%M:%S %p", tz = "America/Bogota"))
+    mutate(Fecha = .inicio_formatear_fecha(Fecha))
   canal <- solicitud$CanalPrincipal
   if (is.na(canal) || !nzchar(canal)) canal <- "SIN ENVÍO"
   racafeStack(
