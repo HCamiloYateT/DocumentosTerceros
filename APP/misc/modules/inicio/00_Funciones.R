@@ -24,6 +24,25 @@
            AbiertoEn, TotalAperturas, Estado, VenceEn, PorcentajeCompletitud)
 }
 
+.inicio_filtrar_solicitudes <- function(solicitudes, filtro) {
+  condicion <- switch(
+    filtro,
+    ENVIADAS = !is.na(solicitudes$EnviadoEn),
+    PENDIENTES = !solicitudes$CanalPrincipal %in% c("CORREO", "QR"),
+    ABIERTAS = solicitudes$TotalAperturas > 0,
+    COMPLETAS = solicitudes$PorcentajeCompletitud >= 100,
+    VENCIDAS = !is.na(solicitudes$VenceEn) & solicitudes$VenceEn < as.POSIXct(Sys.time(), tz = "UTC") &
+      solicitudes$PorcentajeCompletitud < 100,
+    rep(TRUE, nrow(solicitudes))
+  )
+  solicitudes[condicion, , drop = FALSE]
+}
+
+.inicio_etiqueta_filtro <- function(filtro) {
+  switch(filtro, CREADAS = "Creadas", ENVIADAS = "Enviadas", PENDIENTES = "Pendientes",
+         ABIERTAS = "Abiertas", COMPLETAS = "Completas", VENCIDAS = "Vencidas", "Creadas")
+}
+
 .inicio_resultado_compartir <- function(codigo_solicitud) {
   solicitudes <- ListarSolicitudes()
   solicitud <- solicitudes[match(codigo_solicitud, solicitudes$CodigoSolicitud), ]
