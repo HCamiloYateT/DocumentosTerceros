@@ -1,6 +1,7 @@
 function(input, output, session) {
   # Estado de sesión ----
   recarga <- reactiveVal(0L)
+  apertura_registrada <- reactiveVal(character())
   usuario <- reactive({
     valor <- session$user
     if (is.null(valor) || !length(valor) || is.na(valor[1L]) || !nzchar(trimws(valor[1L]))) return("HCYATE")
@@ -25,6 +26,17 @@ function(input, output, session) {
     recarga(recarga() + 1L)
     racafeNotify(session, "Información actualizada", "Se recargaron los índices locales.", type = "success")
   })
+
+  observeEvent(session$clientData$url_search, {
+    parametros <- parseQueryString(sub("^\\?", "", session$clientData$url_search %||% ""))
+    codigo <- parametros$solicitud %||% ""
+    if (!nzchar(codigo) || codigo %in% apertura_registrada()) return(invisible(NULL))
+    tryCatch({
+      RegistrarAperturaSolicitud(codigo)
+      apertura_registrada(c(apertura_registrada(), codigo))
+      recarga(recarga() + 1L)
+    }, error = function(e) invisible(NULL))
+  }, ignoreInit = FALSE)
 
   # Módulos ----
   InicioServer("inicio", recarga)

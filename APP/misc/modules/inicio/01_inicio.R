@@ -5,9 +5,9 @@ InicioUI <- function(id) {
     tags$div(
       class = "documentos-cajas-row",
       fluidRow(
-        column(3, cajaValor_ui(ns("solicitudes"), icono = "folder-open", texto = "Solicitudes",
-                               mostrar_boton = FALSE, compact = TRUE)),
         column(3, cajaValor_ui(ns("enviadas"), icono = "paper-plane", texto = "Enviadas",
+                               mostrar_boton = FALSE, compact = TRUE)),
+        column(3, cajaValor_ui(ns("abiertas"), icono = "link", texto = "Abiertas",
                                mostrar_boton = FALSE, compact = TRUE)),
         column(3, cajaValor_ui(ns("completas"), icono = "circle-check", texto = "Completas",
                                mostrar_boton = FALSE, compact = TRUE)),
@@ -28,26 +28,33 @@ InicioServer <- function(id, recarga) {
 
     datos_tabla <- reactive(.inicio_datos_tabla(solicitudes()))
 
-    cajaValor_server("solicitudes", reactive(nrow(solicitudes())), "numero",
-                     formatear = .inicio_formatear_entero)
     cajaValor_server("enviadas", reactive({
-      sum(solicitudes()$Estado %in% .INICIO_ESTADOS_ENVIADOS)
-    }), "numero", formatear = .inicio_formatear_entero)
+      .inicio_porcentaje(!is.na(solicitudes()$EnviadoEn))
+    }), "numero", formatear = .inicio_formatear_porcentaje)
+    cajaValor_server("abiertas", reactive({
+      .inicio_porcentaje(solicitudes()$TotalAperturas > 0)
+    }), "numero", formatear = .inicio_formatear_porcentaje)
     cajaValor_server("completas", reactive({
-      sum(solicitudes()$PorcentajeCompletitud >= 100)
-    }), "numero", formatear = .inicio_formatear_entero)
+      .inicio_porcentaje(solicitudes()$PorcentajeCompletitud >= 100)
+    }), "numero", formatear = .inicio_formatear_porcentaje)
     cajaValor_server("vencidas", reactive({
       datos <- solicitudes()
-      sum(!is.na(datos$VenceEn) & datos$VenceEn < as.POSIXct(Sys.time(), tz = "UTC") &
-            !datos$Estado %in% .INICIO_ESTADOS_CERRADOS)
-    }), "numero", formatear = .inicio_formatear_entero)
+      .inicio_porcentaje(!is.na(datos$VenceEn) & datos$VenceEn < as.POSIXct(Sys.time(), tz = "UTC") &
+                           datos$PorcentajeCompletitud < 100)
+    }), "numero", formatear = .inicio_formatear_porcentaje)
 
     TablaVancouver(
       "tabla", data = datos_tabla, page_size = 10, nombre_archivo = "estado_solicitudes",
-      col_labels = c(CreadoEn = "Creada", VenceEn = "Vence"),
+      id_col = "CodigoSolicitud", modo_seleccion = "fila",
+      col_labels = c(CreadoPor = "Creada por", CreadoEn = "Creada", CanalPrincipal = "Canal",
+                     EnviadoEn = "Enviada", AbiertoEn = "Primera apertura", TotalAperturas = "Aperturas",
+                     VenceEn = "Vence"),
       col_specs = list(
         PorcentajeCompletitud = list(name = "Completitud", format = list(digits = 1, suffix = "%"))
-      )
+      ),
+      modal_titulo_fn = function(seleccion) paste("Cronología", seleccion$id),
+      modal_contenido_fn = .inicio_cronologia_ui,
+      modal_size = "ventana"
     )
   })
 }

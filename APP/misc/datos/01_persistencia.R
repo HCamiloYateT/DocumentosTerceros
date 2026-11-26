@@ -85,6 +85,18 @@
 InicializarPersistenciaDocumentos <- function() {
   sapply(.RUTAS_DOCUMENTOS, dir.create, recursive = TRUE, showWarnings = FALSE)
 
+  ruta_version <- file.path(.RUTAS_DOCUMENTOS$raiz, "schema_version.rds")
+  version <- .LeerRDS(ruta_version, function() 0L)
+  if (!identical(as.integer(version), DOCUMENTOS_SCHEMA_VERSION)) {
+    .ConBloqueo("persistencia", {
+      unlink(.RUTAS_DOCUMENTOS$indices, recursive = TRUE, force = TRUE)
+      unlink(.RUTAS_DOCUMENTOS$solicitudes, recursive = TRUE, force = TRUE)
+      dir.create(.RUTAS_DOCUMENTOS$indices, recursive = TRUE, showWarnings = FALSE)
+      dir.create(.RUTAS_DOCUMENTOS$solicitudes, recursive = TRUE, showWarnings = FALSE)
+      .EscribirRDSAtomico(DOCUMENTOS_SCHEMA_VERSION, ruta_version)
+    })
+  }
+
   indices <- list(
     terceros = list(ruta = file.path(.RUTAS_DOCUMENTOS$indices, "terceros.rds"), vacio = .TercerosVacio),
     solicitudes = list(ruta = file.path(.RUTAS_DOCUMENTOS$indices, "solicitudes.rds"), vacio = .SolicitudesVacio),
@@ -150,7 +162,7 @@ CrearTercero <- function(datos, usuario) {
   })
 }
 
-CrearSolicitud <- function(codigo_tercero, tipo_proceso, responsable, usuario,
+CrearSolicitud <- function(codigo_tercero, tipo_proceso, usuario,
                            requisitos = .REQUISITOS_BASE$CodigoRequisito) {
   codigo_tercero <- .ValidarCodigoRuta(codigo_tercero, "código de tercero")
   if (!tipo_proceso %in% c("VINCULACION", "ACTUALIZACION")) stop("Tipo de proceso no válido.", call. = FALSE)
@@ -176,10 +188,10 @@ CrearSolicitud <- function(codigo_tercero, tipo_proceso, responsable, usuario,
 
     solicitud <- tibble::tibble(
       CodigoSolicitud = codigo, CodigoTercero = codigo_tercero, TipoProceso = tipo_proceso,
-      Perfil = "VINCULACION_BASE", Responsable = trimws(responsable), CreadoEn = ahora, CreadoPor = usuario,
+      Perfil = "VINCULACION_BASE", CreadoEn = ahora, CreadoPor = usuario, CanalPrincipal = NA_character_,
       EnviadoEn = as.POSIXct(NA, tz = "UTC"), VenceEn = as.POSIXct(NA, tz = "UTC"), Estado = "GENERADA",
-      TotalRequisitos = nrow(seleccion), RequisitosCompletos = 0L, PorcentajeCompletitud = 0,
-      UltimaActividadEn = ahora
+      AbiertoEn = as.POSIXct(NA, tz = "UTC"), TotalAperturas = 0L, TotalRequisitos = nrow(seleccion),
+      RequisitosCompletos = 0L, PorcentajeCompletitud = 0, UltimaActividadEn = ahora
     )
 
     req <- dplyr::transmute(
@@ -200,8 +212,11 @@ CrearSolicitud <- function(codigo_tercero, tipo_proceso, responsable, usuario,
   })
 }
 
-RegistrarEnvioSolicitud <- function(codigo_solicitud, usuario, vigencia_dias = DOCUMENTOS_VIGENCIA_DIAS) {
+RegistrarEnvioSolicitud <- function(codigo_solicitud, usuario, vigencia_dias = DOCUMENTOS_VIGENCIA_DIAS,
+                                    canal = "CORREO") {
   codigo_solicitud <- .ValidarCodigoRuta(codigo_solicitud, "código de solicitud")
+  canal <- toupper(trimws(as.character(canal)[1L]))
+  if (!canal %in% names(.PRIORIDAD_CANALES)) stop("Canal de envío no válido.", call. = FALSE)
   .ConBloqueo("persistencia", {
     solicitudes <- ListarSolicitudes()
     i <- match(codigo_solicitud, solicitudes$CodigoSolicitud)
@@ -212,11 +227,36 @@ RegistrarEnvioSolicitud <- function(codigo_solicitud, usuario, vigencia_dias = D
       solicitudes$VenceEn[i] <- ahora + as.difftime(vigencia_dias, units = "days")
       solicitudes$Estado[i] <- "ENVIADA"
     }
+    actual <- solicitudes$CanalPrincipal[i]
+    if (is.na(actual) || !nzchar(actual) || .PRIORIDAD_CANALES[[canal]] > .PRIORIDAD_CANALES[[actual]]) {
+      solicitudes$CanalPrincipal[i] <- canal
+    }
     solicitudes$UltimaActividadEn[i] <- ahora
     .EscribirRDSAtomico(solicitudes, file.path(.RUTAS_DOCUMENTOS$indices, "solicitudes.rds"))
     .EscribirRDSAtomico(solicitudes[i, ], file.path(.RutaSolicitud(codigo_solicitud), "solicitud.rds"))
     invisible(codigo_solicitud)
   })
+}
+
+RegistrarAperturaSolicitud <- function(codigo_solicitud) {
+  codigo_solicitud <- .ValidarCodigoRuta(codigo_solicitud, "código de solicitud")
+  .ConBloqueo("persistencia", {
+    solicitudes <- ListarSolicitudes()
+    i <- match(codigo_solicitud, solicitudes$CodigoSolicitud)
+    if (is.na(i)) stop("La solicitud no existe.", call. = FALSE)
+    ahora <- as.POSIXct(Sys.time(), tz = "UTC")
+    if (is.na(solicitudes$AbiertoEn[i])) solicitudes$AbiertoEn[i] <- ahora
+    solicitudes$TotalAperturas[i] <- solicitudes$TotalAperturas[i] + 1L
+    if (solicitudes$Estado[i] %in% c("GENERADA", "ENVIADA")) solicitudes$Estado[i] <- "EN_DILIGENCIAMIENTO"
+    solicitudes$UltimaActividadEn[i] <- ahora
+    .EscribirRDSAtomico(solicitudes, file.path(.RUTAS_DOCUMENTOS$indices, "solicitudes.rds"))
+    .EscribirRDSAtomico(solicitudes[i, ], file.path(.RutaSolicitud(codigo_solicitud), "solicitud.rds"))
+  })
+  RegistrarComunicacionSolicitud(
+    codigo_solicitud, "", "Apertura del enlace", "ABIERTO", "TERCERO",
+    detalle = "El enlace de la solicitud fue abierto.", canal = "ENLACE"
+  )
+  invisible(codigo_solicitud)
 }
 
 # Artefactos del expediente ----
@@ -279,7 +319,7 @@ GuardarDocumentoSolicitud <- function(codigo_solicitud, codigo_requisito, pdf_or
     .RegistrarManifiesto(codigo_solicitud, codigo_requisito, "RESUMEN_XLSX", version, excel_destino, usuario)
     .ActualizarRequisito(codigo_solicitud, codigo_requisito, version, ruta_version)
     completado <- TRUE
-    ActualizarCompletitudSolicitud(codigo_solicitud)
+    ActualizarCompletitudSolicitud(codigo_solicitud, usuario)
     invisible(ruta_version)
   })
 }
@@ -312,13 +352,13 @@ GuardarFormularioSolicitud <- function(codigo_solicitud, codigo_requisito, pdf_o
     .RegistrarManifiesto(codigo_solicitud, codigo_requisito, "FORMULARIO_PDF", version, pdf_destino, usuario)
     .ActualizarRequisito(codigo_solicitud, codigo_requisito, version, ruta_version)
     completado <- TRUE
-    ActualizarCompletitudSolicitud(codigo_solicitud)
+    ActualizarCompletitudSolicitud(codigo_solicitud, usuario)
     invisible(ruta_version)
   })
 }
 
 # Completitud ----
-ActualizarCompletitudSolicitud <- function(codigo_solicitud) {
+ActualizarCompletitudSolicitud <- function(codigo_solicitud, usuario = "SISTEMA") {
   codigo_solicitud <- .ValidarCodigoRuta(codigo_solicitud, "código de solicitud")
   requisitos <- ListarRequisitosSolicitudes(codigo_solicitud)
   if (!nrow(requisitos)) return(invisible(NULL))
@@ -338,6 +378,7 @@ ActualizarCompletitudSolicitud <- function(codigo_solicitud) {
   solicitudes <- ListarSolicitudes()
   i <- match(codigo_solicitud, solicitudes$CodigoSolicitud)
   if (is.na(i)) stop("La solicitud no existe.", call. = FALSE)
+  completitud_anterior <- solicitudes$PorcentajeCompletitud[i]
   obligatorios <- requisitos$Obligatorio
   total <- sum(obligatorios)
   terminados <- sum(completo & obligatorios)
@@ -348,5 +389,11 @@ ActualizarCompletitudSolicitud <- function(codigo_solicitud) {
 
   .EscribirRDSAtomico(solicitudes, file.path(.RUTAS_DOCUMENTOS$indices, "solicitudes.rds"))
   .EscribirRDSAtomico(solicitudes[i, ], file.path(.RutaSolicitud(codigo_solicitud), "solicitud.rds"))
+  if (completitud_anterior < 100 && solicitudes$PorcentajeCompletitud[i] >= 100) {
+    RegistrarComunicacionSolicitud(
+      codigo_solicitud, "", "Solicitud completada", "COMPLETADA", usuario,
+      detalle = "Se completaron todos los documentos obligatorios.", canal = "SISTEMA"
+    )
+  }
   invisible(solicitudes[i, ])
 }

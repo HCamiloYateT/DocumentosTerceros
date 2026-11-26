@@ -108,7 +108,7 @@
   asunto <- if (tipo == "qr") "Código QR copiado" else "Enlace copiado"
   detalle <- paste(asunto, "para compartir con el tercero.")
 
-  RegistrarEnvioSolicitud(resultado$codigo, usuario, resultado$datos$vigencia_dias)
+  RegistrarEnvioSolicitud(resultado$codigo, usuario, resultado$datos$vigencia_dias, canal = canal)
   RegistrarComunicacionSolicitud(
     resultado$codigo, resultado$correo_destino, asunto, "COPIADO", usuario,
     detalle = detalle, canal = canal
@@ -121,7 +121,7 @@
 
 .sol_crear <- function(datos, usuario) {
   tercero <- CrearTercero(.sol_datos_tercero(datos), usuario)
-  codigo <- CrearSolicitud(tercero, "VINCULACION", usuario, usuario, datos$documentos)
+  codigo <- CrearSolicitud(tercero, "VINCULACION", usuario, datos$documentos)
   enlace <- ConstruirEnlaceSolicitud(codigo)
   vencimiento <- .sol_formatear_vencimiento(
     as.POSIXct(Sys.time(), tz = "UTC") + as.difftime(datos$vigencia_dias, units = "days")
@@ -135,10 +135,7 @@
 }
 
 .sol_enviar <- function(resultado, usuario) {
-  RegistrarEnvioSolicitud(resultado$codigo, usuario, resultado$datos$vigencia_dias)
-  solicitudes <- ListarSolicitudes()
-  solicitud <- solicitudes[match(resultado$codigo, solicitudes$CodigoSolicitud), ]
-  vencimiento <- .sol_formatear_vencimiento(solicitud$VenceEn)
+  vencimiento <- resultado$vencimiento
   correo <- .sol_render_correo(resultado$datos, resultado$enlace, vencimiento)
   config <- racafeMailConfig()
   error_envio <- NULL
@@ -152,6 +149,13 @@
   )
   estado <- if (is.null(error_envio)) "ENVIADO" else "ERROR"
   detalle <- error_envio %||% "Correo enviado correctamente."
+  if (identical(estado, "ENVIADO")) {
+    RegistrarEnvioSolicitud(resultado$codigo, usuario, resultado$datos$vigencia_dias, canal = "CORREO")
+    solicitudes <- ListarSolicitudes()
+    solicitud <- solicitudes[match(resultado$codigo, solicitudes$CodigoSolicitud), ]
+    vencimiento <- .sol_formatear_vencimiento(solicitud$VenceEn)
+    correo <- .sol_render_correo(resultado$datos, resultado$enlace, vencimiento)
+  }
   RegistrarComunicacionSolicitud(resultado$codigo, resultado$correo_destino, correo$asunto,
                                  estado, usuario, detalle = detalle)
   resultado$vencimiento <- vencimiento

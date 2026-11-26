@@ -13,6 +13,9 @@ DOCUMENTOS_DATA_PATH <- normalizePath(DOCUMENTOS_DATA_PATH, winslash = "/", must
 
 DOCUMENTOS_VIGENCIA_DIAS <- suppressWarnings(as.integer(Sys.getenv("DOCUMENTOS_VIGENCIA_DIAS", "7")))
 if (is.na(DOCUMENTOS_VIGENCIA_DIAS) || DOCUMENTOS_VIGENCIA_DIAS < 1L) DOCUMENTOS_VIGENCIA_DIAS <- 7L
+DOCUMENTOS_SCHEMA_VERSION <- 2L
+
+.PRIORIDAD_CANALES <- c(ENLACE = 1L, QR = 2L, CORREO = 3L)
 
 .REQUISITOS_BASE <- tibble::tribble(
   ~CodigoRequisito, ~TipoRequisito, ~NombreRequisito, ~Obligatorio, ~RequiereFirma,
