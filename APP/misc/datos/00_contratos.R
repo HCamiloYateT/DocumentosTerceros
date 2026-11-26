@@ -13,10 +13,19 @@
 .SolicitudesVacio <- function() {
   tibble::tibble(
     CodigoSolicitud = character(), CodigoTercero = character(), TipoProceso = character(), Perfil = character(),
-    Responsable = character(), CreadoEn = as.POSIXct(character(), tz = "UTC"), CreadoPor = character(),
+    CreadoEn = as.POSIXct(character(), tz = "UTC"), CreadoPor = character(), CanalPrincipal = character(),
     EnviadoEn = as.POSIXct(character(), tz = "UTC"), VenceEn = as.POSIXct(character(), tz = "UTC"),
-    Estado = character(), TotalRequisitos = integer(), RequisitosCompletos = integer(),
+    AbiertoEn = as.POSIXct(character(), tz = "UTC"), TotalAperturas = integer(), Estado = character(),
+    TotalRequisitos = integer(), RequisitosCompletos = integer(),
     PorcentajeCompletitud = numeric(), UltimaActividadEn = as.POSIXct(character(), tz = "UTC")
+  )
+}
+
+.EventosVacio <- function() {
+  tibble::tibble(
+    CodigoSolicitud = character(), Canal = character(), Destinatario = character(), Asunto = character(),
+    Estado = character(), Detalle = character(), RegistradoEn = as.POSIXct(character(), tz = "UTC"),
+    RegistradoPor = character()
   )
 }
 
