@@ -1,5 +1,4 @@
 body <- bs4Dash::bs4DashBody(
-  shiny::includeCSS("www/app.css"),
   .recursos_compartidos,
   racafeShiny::racafeLoaderUI(startup = FALSE, busy = TRUE,
                               triggers = c(actualizar = "BTN_Actualizar", guardar = "solicitudes-crear",
