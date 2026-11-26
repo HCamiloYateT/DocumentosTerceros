@@ -171,16 +171,19 @@ SolicitudesServer <- function(id, usuario, recarga) {
     })
 
     observeEvent(input$confirmar_envio, {
-      if (!isTRUE(input$confirmar_envio) || is.null(solicitud_activa()) || enviando_correo()) {
+      resultado_pendiente <- solicitud_activa()
+      if (!isTRUE(input$confirmar_envio) || is.null(resultado_pendiente) || enviando_correo()) {
         return(invisible(NULL))
       }
+      usuario_envio <- usuario()
+      recarga_envio <- recarga()
       enviando_correo(TRUE)
       loader_correo$show()
       session$onFlushed(function() {
         tryCatch({
-          resultado <- .sol_enviar(solicitud_activa(), usuario())
+          resultado <- .sol_enviar(resultado_pendiente, usuario_envio)
           solicitud_activa(resultado)
-          recarga(recarga() + 1L)
+          recarga(recarga_envio + 1L)
           tipo <- if (identical(resultado$estado_correo, "ENVIADO")) "success" else "warning"
           racafeNotify(session, "Resultado del envío", resultado$detalle_correo, type = tipo)
         }, error = function(e) {
