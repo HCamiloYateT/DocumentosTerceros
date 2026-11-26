@@ -28,7 +28,13 @@ for (.paquete in names(.versiones_componentes)) {
   }
 }
 rm(.paquete, .faltantes)
+
+library("shiny")
+library("bs4Dash")
 library("dplyr")
+library("racafeForms")
+library("racafeModulos")
+library("racafeMail")
 
 # Rutas y recursos ----
 .resolver_ruta_app <- function(inicio = getwd()) {
@@ -42,9 +48,9 @@ library("dplyr")
 .url_compartido <- paste0("https://raw.githubusercontent.com/HCamiloYateT/Compartido/",
                           "5ea18a8a52104d7937fea1ead95d0d9fd05f6c5a")
 .logo_url <- paste0(.url_compartido, "/img/logo2.png")
-.recursos_compartidos <- shiny::tagList(
-  shiny::includeCSS(paste0(.url_compartido, "/Styles/style.css")),
-  shiny::includeScript(paste0(.url_compartido, "/Scripts/scripts"))
+.recursos_compartidos <- tagList(
+  includeCSS(paste0(.url_compartido, "/Styles/style.css")),
+  includeScript(paste0(.url_compartido, "/Scripts/scripts"))
 )
 
 # Fecha visible independiente del locale ----

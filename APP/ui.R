@@ -5,4 +5,4 @@ ui <- bs4Dash::bs4DashPage(
   header = header, sidebar = sidebar, body = body, footer = footer
 )
 
-shiny::tagList(htmltools::suppressDependencies("ionicons", "googlefonts"), ui)
+tagList(htmltools::suppressDependencies("ionicons", "googlefonts"), ui)
