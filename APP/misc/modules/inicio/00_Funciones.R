@@ -19,8 +19,12 @@
 }
 
 .inicio_datos_tabla <- function(solicitudes) {
+  terceros <- ListarTerceros() %>%
+    transmute(CodigoTercero, NIT = if_else(TipoIdentificacion == "NIT", NumeroIdentificacion, NA_character_),
+              RazonSocial = NombreRazonSocial)
   solicitudes %>%
-    select(CodigoSolicitud, CodigoTercero, CreadoPor, CreadoEn, CanalPrincipal, EnviadoEn,
+    left_join(terceros, by = "CodigoTercero") %>%
+    select(CodigoSolicitud, CodigoTercero, NIT, RazonSocial, CreadoPor, CreadoEn, CanalPrincipal, EnviadoEn,
            AbiertoEn, TotalAperturas, Estado, VenceEn, PorcentajeCompletitud)
 }
 
