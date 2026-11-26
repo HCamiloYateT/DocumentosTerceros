@@ -13,7 +13,7 @@ options(
 # Dependencias ----
 .versiones_componentes <- c(
   racafeCore = "1.0.1", racafeForms = "0.8.0", racafeShiny = "1.5.0",
-  racafeModulos = "0.6.7", racafeMail = "0.2.2"
+  racafeModulos = "0.6.7", racafeMail = "0.2.3"
 )
 .paquetes <- c(
   "shiny", "bs4Dash", "dplyr", "tibble", "stringr", "reactable", "openxlsx", "digest",
