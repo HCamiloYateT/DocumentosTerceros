@@ -29,7 +29,7 @@ InicioUI <- function(id) {
   )
 }
 
-InicioServer <- function(id, recarga, usuario) {
+InicioServer <- function(id, recarga, usuario, grupo) {
   moduleServer(id, function(input, output, session) {
     solicitud_modal <- reactiveVal(NULL)
     enviando_correo <- reactiveVal(FALSE)
@@ -38,7 +38,9 @@ InicioServer <- function(id, recarga, usuario) {
 
     solicitudes <- reactive({
       recarga()
-      ListarSolicitudes()
+      datos <- ListarSolicitudes()
+      if (any(grupo() %in% c("ANALÍTICA", "ANALITICA"))) return(datos)
+      dplyr::filter(datos, CreadoPor == usuario())
     })
 
     datos_tabla <- reactive({
