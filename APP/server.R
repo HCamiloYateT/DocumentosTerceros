@@ -9,11 +9,16 @@ function(input, output, session) {
   grupo <- shiny::reactive({
     valor <- session$groups
     if (is.null(valor) || !length(valor)) return("ANALÍTICA")
-    paste(stringr::str_to_upper(valor), collapse = " · ")
+    unique(stringr::str_to_upper(trimws(as.character(valor))))
   })
 
-  output$user <- shiny::renderUI(shiny::tags$strong(usuario()))
-  output$group <- shiny::renderUI(shiny::tags$span(class = "badge badge-secondary", grupo()))
+  output$identidad <- shiny::renderUI({
+    shiny::tagList(
+      shiny::tags$span(class = "documentos-usuario-nombre", usuario()),
+      shiny::tags$span(class = "documentos-usuario-separador", "|"),
+      lapply(grupo(), racafeForms::racafeStatusBadge, variant = "neutral", size = "xs")
+    )
+  })
 
   shiny::observeEvent(input$BTN_Actualizar, {
     recarga(recarga() + 1L)
