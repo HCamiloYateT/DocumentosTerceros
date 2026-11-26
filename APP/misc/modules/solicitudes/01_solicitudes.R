@@ -1,6 +1,8 @@
 # Módulo de solicitudes ----
 .sol_individual_ui <- function(ns) {
-  fluidRow(
+  tagList(
+    tags$div(class = "documentos-cajas-row"),
+    fluidRow(
     column(
       width = 6,
       racafePanel(
@@ -28,12 +30,15 @@
         )
       )
     ),
-    column(width = 6, racafePanel("Compartir con el tercero", uiOutput(ns("compartir_individual"))))
+      column(width = 6, racafePanel("Compartir con el tercero", uiOutput(ns("compartir_individual"))))
+    )
   )
 }
 
 .sol_masiva_ui <- function(ns) {
-  fluidRow(
+  tagList(
+    tags$div(class = "documentos-cajas-row"),
+    fluidRow(
     column(
       width = 6,
       racafePanel(
@@ -48,7 +53,8 @@
         )
       )
     ),
-    column(width = 6, racafePanel("Resultado del envío", uiOutput(ns("resultado_masivo"))))
+      column(width = 6, racafePanel("Resultado del envío", uiOutput(ns("resultado_masivo"))))
+    )
   )
 }
 
@@ -81,8 +87,8 @@ SolicitudesUI <- function(id) {
       "Código QR",
       tags$img(src = resultado$qr, alt = paste("QR", resultado$codigo), width = "180", height = "180"),
       racafeActionBar(
-        right = tagList(
-          racafeCopyButton("copiar_qr", "Copiar QR", image = resultado$qr, ns = ns),
+        left = tagList(
+          racafeCopyButton("copiar_qr", "Copiar QR", image = resultado$qr, notify = TRUE, ns = ns),
           racafeButton("ampliar_qr", "Ampliar QR", icon = "expand", variant = "secondary", ns = ns)
         )
       )
@@ -90,7 +96,7 @@ SolicitudesUI <- function(id) {
     racafeDetailSection(
       "Enlace para compartir",
       racafeInputReadOnly("enlace_solicitud", "Enlace", value = resultado$enlace,
-                          copyable = TRUE, multiline = TRUE, ns = ns)
+                          copyable = TRUE, multiline = FALSE, ns = ns)
     ),
     racafeDetailSection(
       "Correo",
@@ -115,6 +121,8 @@ SolicitudesServer <- function(id, usuario, recarga) {
     solicitud_activa <- reactiveVal(NULL)
     pendiente_masivo <- reactiveVal(NULL)
     resultado_masivo <- reactiveVal(NULL)
+    enviando_correo <- reactiveVal(FALSE)
+    loader_correo <- racafeShiny::racafeLoader(session, type = "enviar", text = "Enviando correo…")
 
     output$compartir_individual <- renderUI(.sol_compartir_ui(solicitud_activa(), session$ns))
 
@@ -151,16 +159,25 @@ SolicitudesServer <- function(id, usuario, recarga) {
     })
 
     observeEvent(input$confirmar_envio, {
-      if (!isTRUE(input$confirmar_envio) || is.null(solicitud_activa())) return(invisible(NULL))
-      tryCatch({
-        resultado <- .sol_enviar(solicitud_activa(), usuario())
-        solicitud_activa(resultado)
-        recarga(recarga() + 1L)
-        tipo <- if (identical(resultado$estado_correo, "ENVIADO")) "success" else "warning"
-        racafeNotify(session, "Resultado del envío", resultado$detalle_correo, type = tipo)
-      }, error = function(e) {
-        racafeNotify(session, "No fue posible enviar el correo", conditionMessage(e), type = "error")
-      })
+      if (!isTRUE(input$confirmar_envio) || is.null(solicitud_activa()) || enviando_correo()) {
+        return(invisible(NULL))
+      }
+      enviando_correo(TRUE)
+      loader_correo$show()
+      session$onFlushed(function() {
+        tryCatch({
+          resultado <- .sol_enviar(solicitud_activa(), usuario())
+          solicitud_activa(resultado)
+          recarga(recarga() + 1L)
+          tipo <- if (identical(resultado$estado_correo, "ENVIADO")) "success" else "warning"
+          racafeNotify(session, "Resultado del envío", resultado$detalle_correo, type = tipo)
+        }, error = function(e) {
+          racafeNotify(session, "No fue posible enviar el correo", conditionMessage(e), type = "error")
+        }, finally = {
+          enviando_correo(FALSE)
+          loader_correo$hide()
+        })
+      }, once = TRUE)
     }, ignoreInit = TRUE)
 
     observeEvent(input$ampliar_qr, {
@@ -172,7 +189,8 @@ SolicitudesServer <- function(id, usuario, recarga) {
         title = paste("Código QR", resultado$codigo), size = "subventana3",
         footer = racafeModalFooter(
           modalButton("Cerrar"),
-          racafeCopyButton("copiar_qr_modal", "Copiar QR", image = resultado$qr, ns = session$ns)
+          racafeCopyButton("copiar_qr_modal", "Copiar QR", image = resultado$qr,
+                           notify = TRUE, ns = session$ns)
         )
       ))
     })
