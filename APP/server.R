@@ -9,7 +9,7 @@ function(input, output, session) {
   grupo <- shiny::reactive({
     valor <- session$groups
     if (is.null(valor) || !length(valor)) return("ANALÍTICA")
-    paste(stringr::str_to_upper(valor), collapse = " · ")
+    paste(stringr::str_to_upper(valor), collapse = " | ")
   })
 
   output$user <- shiny::renderUI(shiny::tags$strong(usuario()))
