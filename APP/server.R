@@ -9,7 +9,7 @@ function(input, output, session) {
   })
   grupo <- reactive({
     valor <- session$groups
-    if (is.null(valor) || !length(valor)) return("ANALÍTICA")
+    if (is.null(valor) || !length(valor)) return("SIN GRUPO")
     unique(stringr::str_to_upper(trimws(as.character(valor))))
   })
 
@@ -39,6 +39,6 @@ function(input, output, session) {
   }, ignoreInit = FALSE)
 
   # Módulos ----
-  InicioServer("inicio", recarga, usuario)
+  InicioServer("inicio", recarga, usuario, grupo)
   SolicitudesServer("solicitudes", usuario, recarga)
 }
