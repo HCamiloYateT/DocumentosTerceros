@@ -48,7 +48,9 @@ InicioServer <- function(id, recarga) {
         columns = list(
           CreadoEn = reactable::colDef(name = "Creada", format = reactable::colFormat(datetime = TRUE)),
           VenceEn = reactable::colDef(name = "Vence", format = reactable::colFormat(datetime = TRUE)),
-          PorcentajeCompletitud = reactable::colDef(name = "Completitud", suffix = "%")
+          PorcentajeCompletitud = reactable::colDef(
+            name = "Completitud", format = reactable::colFormat(digits = 1, suffix = "%")
+          )
         ), language = reactable::reactableLang(searchPlaceholder = "Buscar", noData = "No hay solicitudes")
       )
     })
