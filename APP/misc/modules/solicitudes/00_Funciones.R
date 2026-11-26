@@ -102,6 +102,23 @@
   invisible(NULL)
 }
 
+.sol_registrar_comparticion <- function(resultado, usuario, tipo = c("qr", "enlace")) {
+  tipo <- match.arg(tipo)
+  canal <- if (tipo == "qr") "QR" else "ENLACE"
+  asunto <- if (tipo == "qr") "Código QR copiado" else "Enlace copiado"
+  detalle <- paste(asunto, "para compartir con el tercero.")
+
+  RegistrarEnvioSolicitud(resultado$codigo, usuario, resultado$datos$vigencia_dias)
+  RegistrarComunicacionSolicitud(
+    resultado$codigo, resultado$correo_destino, asunto, "COPIADO", usuario,
+    detalle = detalle, canal = canal
+  )
+  solicitudes <- ListarSolicitudes()
+  solicitud <- solicitudes[match(resultado$codigo, solicitudes$CodigoSolicitud), ]
+  resultado$vencimiento <- .sol_formatear_vencimiento(solicitud$VenceEn)
+  resultado
+}
+
 .sol_crear <- function(datos, usuario) {
   tercero <- CrearTercero(.sol_datos_tercero(datos), usuario)
   codigo <- CrearSolicitud(tercero, "VINCULACION", usuario, usuario, datos$documentos)
