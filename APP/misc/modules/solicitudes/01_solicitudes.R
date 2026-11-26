@@ -88,7 +88,7 @@ SolicitudesUI <- function(id) {
       tags$img(src = resultado$qr, alt = paste("QR", resultado$codigo), width = "180", height = "180"),
       racafeActionBar(
         left = tagList(
-          racafeCopyButton("copiar_qr", "Copiar QR", image = resultado$qr, notify = TRUE, ns = ns),
+          racafeCopyButton("copiar_qr", "Copiar QR", image = resultado$qr, notify = FALSE, ns = ns),
           racafeButton("ampliar_qr", "Ampliar QR", icon = "expand", variant = "secondary", ns = ns)
         )
       )
@@ -96,7 +96,7 @@ SolicitudesUI <- function(id) {
     racafeDetailSection(
       "Enlace para compartir",
       racafeInputReadOnly("enlace_solicitud", "Enlace", value = resultado$enlace,
-                          copyable = TRUE, multiline = FALSE, ns = ns)
+                          copyable = TRUE, multiline = FALSE, ns = ns, notify = FALSE)
     ),
     racafeDetailSection(
       "Correo",
@@ -125,6 +125,18 @@ SolicitudesServer <- function(id, usuario, recarga) {
     loader_correo <- racafeShiny::racafeLoader(session, type = "enviar", text = "Enviando correo…")
 
     output$compartir_individual <- renderUI(.sol_compartir_ui(solicitud_activa(), session$ns))
+
+    observeEvent(input$copiar_qr_copy_result, {
+      .sol_notificar_copia(session, input$copiar_qr_copy_result, "qr")
+    }, ignoreInit = TRUE)
+
+    observeEvent(input$copiar_qr_modal_copy_result, {
+      .sol_notificar_copia(session, input$copiar_qr_modal_copy_result, "qr")
+    }, ignoreInit = TRUE)
+
+    observeEvent(input$enlace_solicitud_copy_copy_result, {
+      .sol_notificar_copia(session, input$enlace_solicitud_copy_copy_result, "enlace")
+    }, ignoreInit = TRUE)
 
     observeEvent(input$crear_solicitud, {
       datos <- .sol_datos_individuales(input)
@@ -190,7 +202,7 @@ SolicitudesServer <- function(id, usuario, recarga) {
         footer = racafeModalFooter(
           modalButton("Cerrar"),
           racafeCopyButton("copiar_qr_modal", "Copiar QR", image = resultado$qr,
-                           notify = TRUE, ns = session$ns)
+                           notify = FALSE, ns = session$ns)
         )
       ))
     })
