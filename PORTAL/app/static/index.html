@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Documentos de terceros | Racafé</title>
+  <link rel="stylesheet" href="./static/portal.css">
+  <script src="./static/portal.js" defer></script>
+</head>
+<body>
+  <header class="portal-header">
+    <a class="brand" href="./" aria-label="Racafé, inicio">
+      <span class="brand-name">Racafé</span>
+      <span class="brand-area">Gestión documental de terceros</span>
+    </a>
+    <span class="secure-label">Acceso protegido</span>
+  </header>
+
+  <main class="portal-shell">
+    <section id="access-panel" class="access-layout" aria-labelledby="access-title">
+      <div class="access-copy">
+        <p class="eyebrow">VINCULACIÓN Y ACTUALIZACIÓN DE TERCEROS</p>
+        <h1 id="access-title">Complete su solicitud documental</h1>
+        <p class="lead">
+          Consulte los documentos requeridos, adjunte los archivos y diligencie los formularios solicitados por
+          Racafé &amp; Cía. S.C.A.
+        </p>
+        <ul class="security-list">
+          <li>El acceso se valida mediante un código enviado al correo registrado.</li>
+          <li>El enlace y el código son personales; no deben compartirse.</li>
+          <li>Los archivos se asocian exclusivamente a la solicitud indicada.</li>
+        </ul>
+      </div>
+
+      <div class="card access-card">
+        <div class="step-label">Validación de acceso</div>
+        <h2>Verifique su correo</h2>
+        <p id="request-reference" class="reference">Solicitud no identificada</p>
+        <p>Enviaremos un código de seis dígitos al correo asociado con la solicitud.</p>
+
+        <button id="request-otp" class="button button-primary" type="button">Enviar código</button>
+
+        <form id="otp-form" class="otp-form" hidden novalidate>
+          <label for="otp-code">Código de verificación</label>
+          <input id="otp-code" name="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                 pattern="[0-9]{6}" placeholder="000000" required>
+          <button class="button button-primary" type="submit">Verificar y continuar</button>
+          <button id="resend-otp" class="button button-secondary" type="button" disabled>Reenviar código</button>
+        </form>
+
+        <div id="access-status" class="status-message" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="request-panel" hidden aria-labelledby="request-title">
+      <div class="request-heading">
+        <div>
+          <p class="eyebrow">SOLICITUD DOCUMENTAL</p>
+          <h1 id="request-title">Documentación requerida</h1>
+          <p id="third-party-name" class="lead"></p>
+        </div>
+        <dl class="request-meta">
+          <div><dt>Solicitud</dt><dd id="request-code">—</dd></div>
+          <div><dt>Identificación</dt><dd id="third-party-id">—</dd></div>
+          <div><dt>Vigencia</dt><dd id="request-expiry">—</dd></div>
+        </dl>
+      </div>
+
+      <div class="progress-card" aria-label="Avance de la solicitud">
+        <div class="progress-copy"><strong>Avance</strong><span id="progress-label">0 de 0 completos</span></div>
+        <progress id="progress-bar" class="progress-track" max="100" value="0">0%</progress>
+      </div>
+
+      <div id="request-status" class="status-message" role="status" aria-live="polite"></div>
+
+      <div class="requirements-grid">
+        <article class="card requirement-card" data-requirement="DOC_RUT">
+          <div class="card-topline"><span class="step-number">01</span><span class="badge">Pendiente</span></div>
+          <h2>Registro Único Tributario</h2>
+          <p>Adjunte el RUT completo, legible y vigente en formato PDF.</p>
+          <dl class="file-rules"><div><dt>Formato</dt><dd>PDF</dd></div><div><dt>Tamaño máximo</dt><dd>15 MB</dd></div></dl>
+          <label class="button button-secondary file-button">
+            Seleccionar RUT
+            <input type="file" accept="application/pdf,.pdf" data-file="DOC_RUT">
+          </label>
+          <p class="file-name" data-file-name="DOC_RUT">Ningún archivo seleccionado</p>
+          <button class="button button-primary" type="button" data-upload="DOC_RUT" disabled>Adjuntar documento</button>
+        </article>
+
+        <article class="card requirement-card" data-requirement="DOC_CERL">
+          <div class="card-topline"><span class="step-number">02</span><span class="badge">Pendiente</span></div>
+          <h2>Certificado de existencia y representación legal</h2>
+          <p>Adjunte el certificado completo, legible y vigente en formato PDF.</p>
+          <dl class="file-rules"><div><dt>Formato</dt><dd>PDF</dd></div><div><dt>Tamaño máximo</dt><dd>15 MB</dd></div></dl>
+          <label class="button button-secondary file-button">
+            Seleccionar certificado
+            <input type="file" accept="application/pdf,.pdf" data-file="DOC_CERL">
+          </label>
+          <p class="file-name" data-file-name="DOC_CERL">Ningún archivo seleccionado</p>
+          <button class="button button-primary" type="button" data-upload="DOC_CERL" disabled>
+            Adjuntar documento
+          </button>
+        </article>
+
+        <article class="card requirement-card" data-requirement="FORM_HABEAS">
+          <div class="card-topline"><span class="step-number">03</span><span class="badge">Pendiente</span></div>
+          <h2>Autorización de tratamiento de datos</h2>
+          <p>Revise la autorización, responda las finalidades y registre su firma en pantalla.</p>
+          <dl class="file-rules"><div><dt>Modalidad</dt><dd>Formulario</dd></div><div><dt>Firma</dt><dd>Requerida</dd></div></dl>
+          <button id="open-authorization" class="button button-primary" type="button">
+            Diligenciar y firmar
+          </button>
+        </article>
+      </div>
+
+      <section class="card final-card">
+        <div>
+          <h2>Enviar documentación</h2>
+          <p>Revise que todos los requisitos estén completos antes de finalizar.</p>
+        </div>
+        <button id="submit-request" class="button button-primary" type="button" disabled>
+          Enviar para revisión
+        </button>
+      </section>
+    </section>
+  </main>
+
+  <footer class="portal-footer">
+    <span>Racafé &amp; Cía. S.C.A.</span>
+    <span>La sesión se cerrará automáticamente al finalizar o por inactividad.</span>
+  </footer>
+</body>
+</html>
