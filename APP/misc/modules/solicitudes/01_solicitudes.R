@@ -166,6 +166,16 @@ SolicitudesServer <- function(id, usuario, recarga) {
       datos <- .sol_datos_individuales(input)
       cond <- .sol_validar(datos)
       if (any(cond)) return(.sol_mostrar_errores(cond))
+      existente <- .sol_solicitud_nit_existente(datos)
+      if (!is.null(existente)) {
+        racafeNotify(
+          session, "Solicitud existente",
+          sprintf("El NIT %s ya tiene la solicitud %s.", datos$numero_documento,
+                  existente$CodigoSolicitud[1L]),
+          type = "warning"
+        )
+        return(invisible(NULL))
+      }
       pendiente_individual(datos)
       racafeConfirm(session, "confirmar_creacion", "Crear solicitud",
                     paste("Se creará la solicitud para", datos$nombre),
@@ -179,8 +189,11 @@ SolicitudesServer <- function(id, usuario, recarga) {
       tryCatch({
         solicitud_activa(.sol_crear(datos, usuario()))
         recarga(recarga() + 1L)
-        racafeNotify(session, "Solicitud creada", "Ya puede compartirla desde el panel derecho.",
-                     type = "success")
+        racafeNotify(
+          session, "Solicitud registrada",
+          "La solicitud fue creada correctamente y está disponible para ser enviada al tercero.",
+          type = "success"
+        )
       }, error = function(e) {
         racafeNotify(session, "No fue posible crear la solicitud", conditionMessage(e), type = "error")
       })

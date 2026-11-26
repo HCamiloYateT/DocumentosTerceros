@@ -172,6 +172,14 @@ CrearSolicitud <- function(codigo_tercero, tipo_proceso, usuario,
     if (!codigo_tercero %in% terceros$CodigoTercero) stop("El tercero no existe.", call. = FALSE)
 
     solicitudes <- ListarSolicitudes()
+    tercero <- terceros[match(codigo_tercero, terceros$CodigoTercero), ]
+    existente <- solicitudes[solicitudes$CodigoTercero == codigo_tercero, , drop = FALSE]
+    if (tercero$TipoIdentificacion == "NIT" && nrow(existente)) {
+      stop(
+        "El NIT ", tercero$NumeroIdentificacion, " ya tiene la solicitud ",
+        existente$CodigoSolicitud[1L], ". No se creó una nueva solicitud.", call. = FALSE
+      )
+    }
     requisitos_indice <- ListarRequisitosSolicitudes()
     seleccion <- dplyr::filter(.REQUISITOS_BASE, CodigoRequisito %in% requisitos)
     if (!nrow(seleccion)) stop("Seleccione al menos un requisito.", call. = FALSE)
