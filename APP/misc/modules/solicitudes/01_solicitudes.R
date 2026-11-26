@@ -50,7 +50,7 @@ SolicitudesUI <- function(id) {
         ),
         racafeForms::racafeInputTextArea("observaciones", "Observaciones", rows = 2, ns = ns),
         racafeForms::racafeFormFooter(
-          racafeShiny::Boton(ns("crear"), "Crear solicitud", icono = "folder-plus")
+          racafeForms::racafeButton("crear", "Crear solicitud", icon = "folder-plus", ns = ns)
         )
       )
     ),
@@ -65,7 +65,7 @@ SolicitudesUI <- function(id) {
                                           format = "integer", min = 1, max = 30, ns = ns)
         ),
         racafeForms::racafeFormFooter(
-          racafeShiny::Boton(ns("registrar_envio"), "Registrar envío", icono = "paper-plane")
+          racafeForms::racafeButton("registrar_envio", "Registrar envío", icon = "paper-plane", ns = ns)
         )
       )
     ),
