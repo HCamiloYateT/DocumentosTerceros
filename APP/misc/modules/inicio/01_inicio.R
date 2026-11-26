@@ -6,17 +6,23 @@ InicioUI <- function(id) {
       class = "documentos-cajas-row",
       fluidRow(
         column(2, cajaValor_ui(ns("creadas"), icono = "folder-plus", texto = "Creadas",
-                               mostrar_boton = FALSE, compact = TRUE)),
+                               mostrar_boton = TRUE, label_boton = "Filtrar", icono_boton = "filter",
+                               compact = TRUE)),
         column(2, cajaValor_ui(ns("enviadas"), icono = "paper-plane", texto = "Enviadas",
-                               mostrar_boton = FALSE, compact = TRUE)),
+                               mostrar_boton = TRUE, label_boton = "Filtrar", icono_boton = "filter",
+                               compact = TRUE)),
         column(2, cajaValor_ui(ns("pendientes"), icono = "hourglass-half", texto = "Pendientes",
-                               mostrar_boton = FALSE, compact = TRUE)),
+                               mostrar_boton = TRUE, label_boton = "Filtrar", icono_boton = "filter",
+                               compact = TRUE)),
         column(2, cajaValor_ui(ns("abiertas"), icono = "link", texto = "Abiertas",
-                               mostrar_boton = FALSE, compact = TRUE)),
+                               mostrar_boton = TRUE, label_boton = "Filtrar", icono_boton = "filter",
+                               compact = TRUE)),
         column(2, cajaValor_ui(ns("completas"), icono = "circle-check", texto = "Completas",
-                               mostrar_boton = FALSE, compact = TRUE)),
+                               mostrar_boton = TRUE, label_boton = "Filtrar", icono_boton = "filter",
+                               compact = TRUE)),
         column(2, cajaValor_ui(ns("vencidas"), icono = "clock", texto = "Vencidas",
-                               mostrar_boton = FALSE, compact = TRUE))
+                               mostrar_boton = TRUE, label_boton = "Filtrar", icono_boton = "filter",
+                               compact = TRUE))
       )
     ),
     racafePanel("Estado de solicitudes", TablaVancouverUI(ns("tabla"), descargable = TRUE))
@@ -27,6 +33,7 @@ InicioServer <- function(id, recarga, usuario) {
   moduleServer(id, function(input, output, session) {
     solicitud_modal <- reactiveVal(NULL)
     enviando_correo <- reactiveVal(FALSE)
+    filtro <- reactiveVal("CREADAS")
     loader_correo <- racafeShiny::racafeLoader(session, type = "enviar", text = "Enviando correo…")
 
     solicitudes <- reactive({
@@ -34,28 +41,37 @@ InicioServer <- function(id, recarga, usuario) {
       ListarSolicitudes()
     })
 
-    datos_tabla <- reactive(.inicio_datos_tabla(solicitudes()))
+    datos_tabla <- reactive({
+      .inicio_datos_tabla(.inicio_filtrar_solicitudes(solicitudes(), filtro()))
+    })
 
-    cajaValor_server("creadas", reactive({
+    caja_creadas <- cajaValor_server("creadas", reactive({
       .inicio_indicador(rep(TRUE, nrow(solicitudes())))
     }), "numero", formatear = .inicio_formatear_cantidad)
-    cajaValor_server("enviadas", reactive({
+    caja_enviadas <- cajaValor_server("enviadas", reactive({
       .inicio_indicador(!is.na(solicitudes()$EnviadoEn))
     }), "numero", formatear = .inicio_formatear_indicador)
-    cajaValor_server("pendientes", reactive({
+    caja_pendientes <- cajaValor_server("pendientes", reactive({
       .inicio_indicador(!solicitudes()$CanalPrincipal %in% c("CORREO", "QR"))
     }), "numero", formatear = .inicio_formatear_indicador)
-    cajaValor_server("abiertas", reactive({
+    caja_abiertas <- cajaValor_server("abiertas", reactive({
       .inicio_indicador(solicitudes()$TotalAperturas > 0)
     }), "numero", formatear = .inicio_formatear_indicador)
-    cajaValor_server("completas", reactive({
+    caja_completas <- cajaValor_server("completas", reactive({
       .inicio_indicador(solicitudes()$PorcentajeCompletitud >= 100)
     }), "numero", formatear = .inicio_formatear_indicador)
-    cajaValor_server("vencidas", reactive({
+    caja_vencidas <- cajaValor_server("vencidas", reactive({
       datos <- solicitudes()
       .inicio_indicador(!is.na(datos$VenceEn) & datos$VenceEn < as.POSIXct(Sys.time(), tz = "UTC") &
                           datos$PorcentajeCompletitud < 100)
     }), "numero", formatear = .inicio_formatear_indicador)
+
+    observeEvent(caja_creadas$click_detalle(), filtro("CREADAS"), ignoreInit = TRUE)
+    observeEvent(caja_enviadas$click_detalle(), filtro("ENVIADAS"), ignoreInit = TRUE)
+    observeEvent(caja_pendientes$click_detalle(), filtro("PENDIENTES"), ignoreInit = TRUE)
+    observeEvent(caja_abiertas$click_detalle(), filtro("ABIERTAS"), ignoreInit = TRUE)
+    observeEvent(caja_completas$click_detalle(), filtro("COMPLETAS"), ignoreInit = TRUE)
+    observeEvent(caja_vencidas$click_detalle(), filtro("VENCIDAS"), ignoreInit = TRUE)
 
     TablaVancouver(
       "tabla", data = datos_tabla, page_size = 10, nombre_archivo = "estado_solicitudes",
@@ -69,7 +85,8 @@ InicioServer <- function(id, recarga, usuario) {
       modal_titulo_fn = function(seleccion) paste("Cronología", seleccion$id),
       modal_pre_fn = function(seleccion) solicitud_modal(seleccion$id),
       modal_contenido_fn = function(seleccion) .inicio_cronologia_ui(seleccion, session$ns),
-      modal_size = "ventana"
+      modal_size = "ventana",
+      footer = reactive(paste("Filtro activo:", .inicio_etiqueta_filtro(filtro())))
     )
 
     registrar_copia <- function(resultado_copia, tipo) {
