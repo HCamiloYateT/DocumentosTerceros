@@ -6,6 +6,5 @@ header <- bs4Dash::bs4DashNavbar(
     shiny::uiOutput("group", inline = TRUE),
     racafeShiny::Boton("BTN_Actualizar", label = NULL, icono = "sync", size = "xxs",
                        label_posicion = "below", titulo = "Actualizar")
-  ),
-  rightUi = shiny::tags$li(class = "dropdown documentos-date", format_fecha_es(Sys.Date()))
+  )
 )
