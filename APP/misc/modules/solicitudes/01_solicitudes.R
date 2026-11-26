@@ -124,18 +124,27 @@ SolicitudesServer <- function(id, usuario, recarga) {
     enviando_correo <- reactiveVal(FALSE)
     loader_correo <- racafeShiny::racafeLoader(session, type = "enviar", text = "Enviando correo…")
 
+    registrar_copia <- function(resultado_copia, tipo) {
+      .sol_notificar_copia(session, resultado_copia, tipo)
+      if (!isTRUE(resultado_copia$success) || is.null(solicitud_activa())) return(invisible(NULL))
+      resultado <- .sol_registrar_comparticion(solicitud_activa(), usuario(), tipo)
+      solicitud_activa(resultado)
+      recarga(recarga() + 1L)
+      invisible(NULL)
+    }
+
     output$compartir_individual <- renderUI(.sol_compartir_ui(solicitud_activa(), session$ns))
 
     observeEvent(input$copiar_qr_copy_result, {
-      .sol_notificar_copia(session, input$copiar_qr_copy_result, "qr")
+      registrar_copia(input$copiar_qr_copy_result, "qr")
     }, ignoreInit = TRUE)
 
     observeEvent(input$copiar_qr_modal_copy_result, {
-      .sol_notificar_copia(session, input$copiar_qr_modal_copy_result, "qr")
+      registrar_copia(input$copiar_qr_modal_copy_result, "qr")
     }, ignoreInit = TRUE)
 
     observeEvent(input$enlace_solicitud_copy_copy_result, {
-      .sol_notificar_copia(session, input$enlace_solicitud_copy_copy_result, "enlace")
+      registrar_copia(input$enlace_solicitud_copy_copy_result, "enlace")
     }, ignoreInit = TRUE)
 
     observeEvent(input$crear_solicitud, {
@@ -171,28 +180,23 @@ SolicitudesServer <- function(id, usuario, recarga) {
     })
 
     observeEvent(input$confirmar_envio, {
-      resultado_pendiente <- solicitud_activa()
-      if (!isTRUE(input$confirmar_envio) || is.null(resultado_pendiente) || enviando_correo()) {
+      if (!isTRUE(input$confirmar_envio) || is.null(solicitud_activa()) || enviando_correo()) {
         return(invisible(NULL))
       }
-      usuario_envio <- usuario()
-      recarga_envio <- recarga()
       enviando_correo(TRUE)
       loader_correo$show()
-      session$onFlushed(function() {
-        tryCatch({
-          resultado <- .sol_enviar(resultado_pendiente, usuario_envio)
-          solicitud_activa(resultado)
-          recarga(recarga_envio + 1L)
-          tipo <- if (identical(resultado$estado_correo, "ENVIADO")) "success" else "warning"
-          racafeNotify(session, "Resultado del envío", resultado$detalle_correo, type = tipo)
-        }, error = function(e) {
-          racafeNotify(session, "No fue posible enviar el correo", conditionMessage(e), type = "error")
-        }, finally = {
-          enviando_correo(FALSE)
-          loader_correo$hide()
-        })
-      }, once = TRUE)
+      tryCatch({
+        resultado <- .sol_enviar(solicitud_activa(), usuario())
+        solicitud_activa(resultado)
+        recarga(recarga() + 1L)
+        tipo <- if (identical(resultado$estado_correo, "ENVIADO")) "success" else "warning"
+        racafeNotify(session, "Resultado del envío", resultado$detalle_correo, type = tipo)
+      }, error = function(e) {
+        racafeNotify(session, "No fue posible enviar el correo", conditionMessage(e), type = "error")
+      }, finally = {
+        enviando_correo(FALSE)
+        loader_correo$hide()
+      })
     }, ignoreInit = TRUE)
 
     observeEvent(input$ampliar_qr, {
