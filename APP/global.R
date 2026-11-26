@@ -12,8 +12,8 @@ options(
 
 # Dependencias ----
 .versiones_componentes <- c(
-  racafeCore = "1.0.1", racafeForms = "0.8.0", racafeShiny = "1.5.0",
-  racafeModulos = "0.6.7", racafeMail = "0.2.3"
+  racafeCore = "1.0.1", racafeForms = "0.8.1", racafeShiny = "1.5.0",
+  racafeModulos = "0.6.7", racafeMail = "0.2.4"
 )
 .paquetes <- c(
   "shiny", "bs4Dash", "dplyr", "tibble", "stringr", "reactable", "openxlsx", "digest",
@@ -50,7 +50,10 @@ library("racafeMail")
 .logo_url <- paste0(.url_compartido, "/img/logo2.png")
 .recursos_compartidos <- tagList(
   includeCSS(paste0(.url_compartido, "/Styles/style.css")),
-  includeScript(paste0(.url_compartido, "/Scripts/scripts"))
+  includeCSS(paste0(.url_compartido, "/Styles/racafe-forms.css")),
+  includeScript(paste0(.url_compartido, "/Scripts/scripts")),
+  includeScript(paste0(.url_compartido, "/Scripts/clipboard.js")),
+  includeScript(paste0(.url_compartido, "/Scripts/forms.js"))
 )
 
 # Fecha visible independiente del locale ----
