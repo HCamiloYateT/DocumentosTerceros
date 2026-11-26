@@ -87,7 +87,8 @@ InicioServer <- function(id, recarga, usuario, grupo) {
     TablaVancouver(
       "tabla", data = datos_tabla, page_size = 10, nombre_archivo = "estado_solicitudes",
       id_col = "CodigoSolicitud", modo_seleccion = "fila",
-      col_labels = c(CreadoPor = "Creada por", CreadoEn = "Creada", CanalPrincipal = "Canal",
+      col_labels = c(RazonSocial = "Razón social", CreadoPor = "Creada por", CreadoEn = "Creada",
+                     CanalPrincipal = "Canal",
                      EnviadoEn = "Enviada", AbiertoEn = "Primera apertura", TotalAperturas = "Aperturas",
                      VenceEn = "Vence"),
       col_specs = list(
