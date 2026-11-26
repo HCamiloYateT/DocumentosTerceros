@@ -11,7 +11,11 @@
 .inicio_formatear_indicador <- function(valor) {
   cantidad <- formatC(valor$cantidad, format = "f", digits = 0, big.mark = ".", decimal.mark = ",")
   porcentaje <- formatC(valor$porcentaje, format = "f", digits = 1, decimal.mark = ",")
-  tags$span(cantidad, tags$small(paste0(" · ", porcentaje, "%")))
+  tags$span(cantidad, tags$small(paste0(" (", porcentaje, "%)")))
+}
+
+.inicio_formatear_cantidad <- function(valor) {
+  tags$span(formatC(valor$cantidad, format = "f", digits = 0, big.mark = ".", decimal.mark = ","))
 }
 
 .inicio_datos_tabla <- function(solicitudes) {

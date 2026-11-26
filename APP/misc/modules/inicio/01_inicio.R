@@ -38,7 +38,7 @@ InicioServer <- function(id, recarga, usuario) {
 
     cajaValor_server("creadas", reactive({
       .inicio_indicador(rep(TRUE, nrow(solicitudes())))
-    }), "numero", formatear = .inicio_formatear_indicador)
+    }), "numero", formatear = .inicio_formatear_cantidad)
     cajaValor_server("enviadas", reactive({
       .inicio_indicador(!is.na(solicitudes()$EnviadoEn))
     }), "numero", formatear = .inicio_formatear_indicador)
