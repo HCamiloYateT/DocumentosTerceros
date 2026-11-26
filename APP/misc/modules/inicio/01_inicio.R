@@ -47,6 +47,15 @@ InicioServer <- function(id, recarga, usuario, grupo) {
       .inicio_datos_tabla(.inicio_filtrar_solicitudes(solicitudes(), filtro()))
     })
 
+    output$detalle_solicitud <- renderUI({
+      codigo <- solicitud_modal()
+      req(codigo)
+      datos <- solicitudes()
+      fila <- match(codigo, datos$CodigoSolicitud)
+      req(!is.na(fila))
+      .inicio_cronologia_ui(list(data = datos[fila, , drop = FALSE]), session$ns)
+    })
+
     caja_creadas <- cajaValor_server("creadas", reactive({
       .inicio_indicador(rep(TRUE, nrow(solicitudes())))
     }), "numero", formatear = .inicio_formatear_cantidad)
@@ -86,7 +95,7 @@ InicioServer <- function(id, recarga, usuario, grupo) {
       ),
       modal_titulo_fn = function(seleccion) paste("Cronología", seleccion$id),
       modal_pre_fn = function(seleccion) solicitud_modal(seleccion$id),
-      modal_contenido_fn = function(seleccion) .inicio_cronologia_ui(seleccion, session$ns),
+      modal_contenido_fn = function(seleccion) uiOutput(session$ns("detalle_solicitud")),
       modal_size = "ventana",
       footer = reactive(paste("Filtro activo:", .inicio_etiqueta_filtro(filtro())))
     )
