@@ -111,6 +111,10 @@ SolicitudesUI <- function(id) {
         )
       )
     ),
+    racafeActionBar(
+      right = racafeButton("nueva_solicitud", "Nueva solicitud", icon = "plus",
+                           variant = "secondary", ns = ns)
+    ),
     spacing = "compact"
   )
 }
@@ -150,6 +154,13 @@ SolicitudesServer <- function(id, usuario, recarga) {
     observeEvent(input$enlace_solicitud_copy_copy_result, {
       registrar_copia(input$enlace_solicitud_copy_copy_result, "enlace")
     }, ignoreInit = TRUE)
+
+    observeEvent(input$nueva_solicitud, {
+      racafeResetForm(session, "solicitud_individual", clear = FALSE)
+      pendiente_individual(NULL)
+      solicitud_activa(NULL)
+      racafeNotify(session, "Formulario limpio", "Puede crear una nueva solicitud.", type = "success")
+    })
 
     observeEvent(input$crear_solicitud, {
       datos <- .sol_datos_individuales(input)
