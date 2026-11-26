@@ -9,11 +9,17 @@ function(input, output, session) {
   grupo <- shiny::reactive({
     valor <- session$groups
     if (is.null(valor) || !length(valor)) return("ANALÍTICA")
-    paste(stringr::str_to_upper(valor), collapse = " | ")
+    unique(stringr::str_to_upper(trimws(as.character(valor))))
   })
 
-  output$user <- shiny::renderUI(shiny::tags$strong(usuario()))
-  output$group <- shiny::renderUI(shiny::tags$span(class = "badge badge-secondary", grupo()))
+  output$identidad <- shiny::renderUI({
+    badges <- lapply(grupo(), function(x) shiny::tags$span(class = "badge badge-secondary ml-1", x))
+    shiny::tagList(
+      shiny::tags$span(class = "text-muted", usuario()),
+      shiny::tags$span(class = "text-muted", " | "),
+      badges
+    )
+  })
 
   shiny::observeEvent(input$BTN_Actualizar, {
     recarga(recarga() + 1L)
