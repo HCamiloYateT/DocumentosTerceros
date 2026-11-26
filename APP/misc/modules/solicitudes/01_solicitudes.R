@@ -3,33 +3,33 @@
   tagList(
     tags$div(class = "documentos-cajas-row"),
     fluidRow(
-    column(
-      width = 6,
-      racafePanel(
-        "Datos del tercero",
-        racafeForm(
-          id = "solicitud_individual", ns = ns, variant = "plain",
-          racafeInputText("nombre", "Nombre completo o razón social", required = TRUE, ns = ns),
-          racafeFormRow(
-            columns = 2, responsive = "auto",
-            racafeInputSelect("tipo_documento", "Tipo de documento", choices = .SOL_TIPOS_DOCUMENTO,
-                              selected = "NIT", empty = FALSE, ns = ns),
-            racafeInputText("numero_documento", "Número de documento", required = TRUE, ns = ns)
-          ),
-          racafeFormRow(
-            columns = 2, responsive = "auto",
-            racafeInputText("correo", "Correo electrónico", type = "email", required = TRUE, ns = ns),
-            racafeInputText("celular", "Celular", type = "tel", ns = ns)
-          ),
-          racafeInputSelect("documentos", "Documentos a incluir", choices = .SOL_DOCUMENTOS,
-                            selected = unname(.SOL_DOCUMENTOS), multiple = TRUE, empty = FALSE,
-                            gender = "m", ns = ns),
-          racafeInputNumeric("vigencia_dias", "Vigencia del enlace en días", value = DOCUMENTOS_VIGENCIA_DIAS,
-                             format = "integer", min = 1, max = 30, ns = ns),
-          racafeFormFooter(racafeButton("crear_solicitud", "Crear solicitud", icon = "folder-plus", ns = ns))
+      column(
+        width = 6,
+        racafePanel(
+          "Datos del tercero",
+          racafeForm(
+            id = "solicitud_individual", ns = ns, variant = "plain",
+            racafeInputText("nombre", "Nombre completo o razón social", required = TRUE, ns = ns),
+            racafeFormRow(
+              columns = 2, responsive = "auto",
+              racafeInputSelect("tipo_documento", "Tipo de documento", choices = .SOL_TIPOS_DOCUMENTO,
+                                selected = "NIT", empty = FALSE, ns = ns),
+              racafeInputText("numero_documento", "Número de documento", required = TRUE, ns = ns)
+            ),
+            racafeFormRow(
+              columns = 2, responsive = "auto",
+              racafeInputText("correo", "Correo electrónico", type = "email", required = TRUE, ns = ns),
+              racafeInputText("celular", "Celular", type = "tel", ns = ns)
+            ),
+            racafeInputSelect("documentos", "Documentos a incluir", choices = .SOL_DOCUMENTOS,
+                              selected = unname(.SOL_DOCUMENTOS), multiple = TRUE, empty = FALSE,
+                              gender = "m", ns = ns),
+            racafeInputNumeric("vigencia_dias", "Vigencia del enlace en días", value = DOCUMENTOS_VIGENCIA_DIAS,
+                               format = "integer", min = 1, max = 30, ns = ns),
+            racafeFormFooter(racafeButton("crear_solicitud", "Crear solicitud", icon = "folder-plus", ns = ns))
+          )
         )
-      )
-    ),
+      ),
       column(width = 6, racafePanel("Compartir con el tercero", uiOutput(ns("compartir_individual"))))
     )
   )
@@ -39,20 +39,20 @@
   tagList(
     tags$div(class = "documentos-cajas-row"),
     fluidRow(
-    column(
-      width = 6,
-      racafePanel(
-        "Archivo de solicitudes",
-        racafeInputFile("archivo_masivo", "Archivo Excel", accept = ".xlsx",
-                        max_size = .SOL_MAX_ARCHIVO, help = "Máximo 100 solicitudes por archivo.", ns = ns),
-        p("Columnas: Nombre, TipoDocumento, NumeroDocumento, Correo, Celular, Documentos y VigenciaDias. ",
-          "Separe varios documentos con |."),
-        racafeFormFooter(
-          racafeButtonDownload("plantilla_masiva", "Descargar plantilla", icon = "file-excel", ns = ns),
-          racafeButton("procesar_masivo", "Crear y enviar solicitudes", icon = "paper-plane", ns = ns)
+      column(
+        width = 6,
+        racafePanel(
+          "Archivo de solicitudes",
+          racafeInputFile("archivo_masivo", "Archivo Excel", accept = ".xlsx",
+                          max_size = .SOL_MAX_ARCHIVO, help = "Máximo 100 solicitudes por archivo.", ns = ns),
+          p("Columnas: Nombre, TipoDocumento, NumeroDocumento, Correo, Celular, Documentos y VigenciaDias. ",
+            "Separe varios documentos con |."),
+          racafeFormFooter(
+            racafeButtonDownload("plantilla_masiva", "Descargar plantilla", icon = "file-excel", ns = ns),
+            racafeButton("procesar_masivo", "Crear y enviar solicitudes", icon = "paper-plane", ns = ns)
+          )
         )
-      )
-    ),
+      ),
       column(width = 6, racafePanel("Resultado del envío", uiOutput(ns("resultado_masivo"))))
     )
   )
