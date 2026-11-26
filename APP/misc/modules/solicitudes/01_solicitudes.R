@@ -72,8 +72,8 @@
 }
 
 .SolicitudIndividualUI <- function(ns) {
-  bs4Dash::bs4Row(
-    bs4Dash::bs4Column(
+  shiny::fluidRow(
+    shiny::column(
       width = 6,
       racafeForms::racafePanel(
         "Datos del tercero",
@@ -117,7 +117,7 @@
         )
       )
     ),
-    bs4Dash::bs4Column(
+    shiny::column(
       width = 6,
       racafeForms::racafePanel(
         "Compartir con el tercero", shiny::uiOutput(ns("compartir_individual"))
@@ -127,8 +127,8 @@
 }
 
 .SolicitudMasivaUI <- function(ns) {
-  bs4Dash::bs4Row(
-    bs4Dash::bs4Column(
+  shiny::fluidRow(
+    shiny::column(
       width = 6,
       racafeForms::racafePanel(
         "Archivo de solicitudes",
@@ -150,7 +150,7 @@
         )
       )
     ),
-    bs4Dash::bs4Column(
+    shiny::column(
       width = 6,
       racafeForms::racafePanel(
         "Resultado del envío", shiny::uiOutput(ns("resultado_masivo"))
