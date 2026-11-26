@@ -134,6 +134,21 @@
   )
 }
 
+.sol_solicitud_nit_existente <- function(datos) {
+  if (!identical(datos$tipo_documento, "NIT")) return(NULL)
+  numero <- toupper(gsub("[^A-Za-z0-9]", "", datos$numero_documento))
+  terceros <- ListarTerceros()
+  codigos <- terceros$CodigoTercero[
+    terceros$TipoIdentificacion == "NIT" &
+      toupper(gsub("[^A-Za-z0-9]", "", terceros$NumeroIdentificacion)) == numero
+  ]
+  if (!length(codigos)) return(NULL)
+  solicitudes <- ListarSolicitudes()
+  existentes <- solicitudes[solicitudes$CodigoTercero %in% codigos, , drop = FALSE]
+  if (!nrow(existentes)) return(NULL)
+  existentes[order(existentes$CreadoEn, decreasing = TRUE)[1L], , drop = FALSE]
+}
+
 .sol_enviar <- function(resultado, usuario) {
   vencimiento <- resultado$vencimiento
   correo <- .sol_render_correo(resultado$datos, resultado$enlace, vencimiento)
