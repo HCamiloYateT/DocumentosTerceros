@@ -2,6 +2,10 @@
   padding: 14px 10px 70px;
 }
 
+.documentos-cajas-row {
+  margin-bottom: 10px;
+}
+
 .documentos-user,
 .documentos-date {
   align-items: center;
