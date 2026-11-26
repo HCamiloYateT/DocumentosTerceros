@@ -27,6 +27,12 @@ InicioServer <- function(id, recarga) {
       ListarSolicitudes()
     })
 
+    datos_tabla <- shiny::reactive({
+      solicitudes() %>%
+        dplyr::select(CodigoSolicitud, CodigoTercero, Responsable, Estado, CreadoEn, VenceEn,
+                      PorcentajeCompletitud)
+    })
+
     formatear_entero <- function(valor) {
       shiny::tags$span(formatC(valor, format = "f", digits = 0, big.mark = ".", decimal.mark = ","))
     }
@@ -43,12 +49,6 @@ InicioServer <- function(id, recarga) {
       sum(!is.na(datos$VenceEn) & datos$VenceEn < as.POSIXct(Sys.time(), tz = "UTC") &
             !datos$Estado %in% c("APROBADA", "CANCELADA"))
     }), "numero", formatear = formatear_entero)
-
-    datos_tabla <- shiny::reactive({
-      solicitudes() %>%
-        dplyr::select(CodigoSolicitud, CodigoTercero, Responsable, Estado, CreadoEn, VenceEn,
-                      PorcentajeCompletitud)
-    })
 
     racafeModulos::TablaVancouver(
       "tabla", data = datos_tabla, page_size = 10, nombre_archivo = "estado_solicitudes",
