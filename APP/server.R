@@ -39,6 +39,6 @@ function(input, output, session) {
   }, ignoreInit = FALSE)
 
   # Módulos ----
-  InicioServer("inicio", recarga)
+  InicioServer("inicio", recarga, usuario)
   SolicitudesServer("solicitudes", usuario, recarga)
 }
