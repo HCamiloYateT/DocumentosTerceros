@@ -19,8 +19,12 @@ InicioUI <- function(id) {
   )
 }
 
-InicioServer <- function(id, recarga) {
+InicioServer <- function(id, recarga, usuario) {
   moduleServer(id, function(input, output, session) {
+    solicitud_modal <- reactiveVal(NULL)
+    enviando_correo <- reactiveVal(FALSE)
+    loader_correo <- racafeShiny::racafeLoader(session, type = "enviar", text = "Enviando correo…")
+
     solicitudes <- reactive({
       recarga()
       ListarSolicitudes()
@@ -53,8 +57,56 @@ InicioServer <- function(id, recarga) {
         PorcentajeCompletitud = list(name = "Completitud", format = list(digits = 1, suffix = "%"))
       ),
       modal_titulo_fn = function(seleccion) paste("Cronología", seleccion$id),
-      modal_contenido_fn = .inicio_cronologia_ui,
+      modal_pre_fn = function(seleccion) solicitud_modal(seleccion$id),
+      modal_contenido_fn = function(seleccion) .inicio_cronologia_ui(seleccion, session$ns),
       modal_size = "ventana"
     )
+
+    registrar_copia <- function(resultado_copia, tipo) {
+      .sol_notificar_copia(session, resultado_copia, tipo)
+      if (!isTRUE(resultado_copia$success) || is.null(solicitud_modal())) return(invisible(NULL))
+      tryCatch({
+        resultado <- .inicio_resultado_compartir(solicitud_modal())
+        .sol_registrar_comparticion(resultado, usuario(), tipo)
+        recarga(recarga() + 1L)
+      }, error = function(e) {
+        racafeNotify(session, "Copia realizada sin registro", conditionMessage(e), type = "warning")
+      })
+      invisible(NULL)
+    }
+
+    observeEvent(input$inicio_copiar_enlace_copy_result, {
+      registrar_copia(input$inicio_copiar_enlace_copy_result, "enlace")
+    }, ignoreInit = TRUE)
+
+    observeEvent(input$inicio_copiar_qr_copy_result, {
+      registrar_copia(input$inicio_copiar_qr_copy_result, "qr")
+    }, ignoreInit = TRUE)
+
+    observeEvent(input$inicio_enviar_correo, {
+      resultado <- .inicio_resultado_compartir(solicitud_modal())
+      racafeConfirm(session, "inicio_confirmar_envio", "Enviar correo",
+                    paste("Se enviará el correo a", resultado$correo_destino),
+                    confirm_label = "Enviar", ns = session$ns)
+    })
+
+    observeEvent(input$inicio_confirmar_envio, {
+      if (!isTRUE(input$inicio_confirmar_envio) || is.null(solicitud_modal()) || enviando_correo()) {
+        return(invisible(NULL))
+      }
+      enviando_correo(TRUE)
+      loader_correo$show()
+      tryCatch({
+        resultado <- .sol_enviar(.inicio_resultado_compartir(solicitud_modal()), usuario())
+        recarga(recarga() + 1L)
+        tipo <- if (identical(resultado$estado_correo, "ENVIADO")) "success" else "warning"
+        racafeNotify(session, "Resultado del envío", resultado$detalle_correo, type = tipo)
+      }, error = function(e) {
+        racafeNotify(session, "No fue posible enviar el correo", conditionMessage(e), type = "error")
+      }, finally = {
+        enviando_correo(FALSE)
+        loader_correo$hide()
+      })
+    }, ignoreInit = TRUE)
   })
 }
