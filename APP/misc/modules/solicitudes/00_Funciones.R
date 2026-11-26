@@ -37,11 +37,19 @@
   format(fecha, "%d/%m/%Y %I:%M %p", tz = "America/Bogota")
 }
 
+.sol_nombres_documentos <- function(codigos) {
+  nombres <- names(.SOL_DOCUMENTOS)[match(codigos, unname(.SOL_DOCUMENTOS))]
+  unique(nombres[!is.na(nombres)])
+}
+
 .sol_render_correo <- function(datos, enlace, vencimiento) {
   config <- racafeMailConfig()
   racafeMailRender(
     "invitacion",
-    list(nombre = datos$nombre, enlace = enlace, vencimiento = vencimiento),
+    list(
+      nombre = datos$nombre, enlace = enlace, vencimiento = vencimiento,
+      documentos = .sol_nombres_documentos(datos$documentos)
+    ),
     config = config
   )
 }
@@ -72,7 +80,8 @@
   tryCatch(
     racafeMailInvitacion(
       para = resultado$correo_destino, nombre = resultado$datos$nombre,
-      enlace = resultado$enlace, vencimiento = vencimiento, config = config
+      enlace = resultado$enlace, vencimiento = vencimiento, config = config,
+      documentos = .sol_nombres_documentos(resultado$datos$documentos)
     ),
     error = function(e) error_envio <<- conditionMessage(e)
   )

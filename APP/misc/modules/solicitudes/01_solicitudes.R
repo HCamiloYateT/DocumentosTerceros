@@ -1,54 +1,60 @@
 # Módulo de solicitudes ----
 .sol_individual_ui <- function(ns) {
-  fluidRow(
-    column(
-      width = 6,
-      racafePanel(
-        "Datos del tercero",
-        racafeForm(
-          id = "solicitud_individual", ns = ns, variant = "plain",
-          racafeInputText("nombre", "Nombre completo o razón social", required = TRUE, ns = ns),
-          racafeFormRow(
-            columns = 2, responsive = "auto",
-            racafeInputSelect("tipo_documento", "Tipo de documento", choices = .SOL_TIPOS_DOCUMENTO,
-                              selected = "NIT", empty = FALSE, ns = ns),
-            racafeInputText("numero_documento", "Número de documento", required = TRUE, ns = ns)
-          ),
-          racafeFormRow(
-            columns = 2, responsive = "auto",
-            racafeInputText("correo", "Correo electrónico", type = "email", required = TRUE, ns = ns),
-            racafeInputText("celular", "Celular", type = "tel", ns = ns)
-          ),
-          racafeInputSelect("documentos", "Documentos a incluir", choices = .SOL_DOCUMENTOS,
-                            selected = unname(.SOL_DOCUMENTOS), multiple = TRUE, empty = FALSE,
-                            gender = "m", ns = ns),
-          racafeInputNumeric("vigencia_dias", "Vigencia del enlace en días", value = DOCUMENTOS_VIGENCIA_DIAS,
-                             format = "integer", min = 1, max = 30, ns = ns),
-          racafeFormFooter(racafeButton("crear_solicitud", "Crear solicitud", icon = "folder-plus", ns = ns))
+  tagList(
+    tags$div(class = "documentos-cajas-row"),
+    fluidRow(
+      column(
+        width = 6,
+        racafePanel(
+          "Datos del tercero",
+          racafeForm(
+            id = "solicitud_individual", ns = ns, variant = "plain",
+            racafeInputText("nombre", "Nombre completo o razón social", required = TRUE, ns = ns),
+            racafeFormRow(
+              columns = 2, responsive = "auto",
+              racafeInputSelect("tipo_documento", "Tipo de documento", choices = .SOL_TIPOS_DOCUMENTO,
+                                selected = "NIT", empty = FALSE, ns = ns),
+              racafeInputText("numero_documento", "Número de documento", required = TRUE, ns = ns)
+            ),
+            racafeFormRow(
+              columns = 2, responsive = "auto",
+              racafeInputText("correo", "Correo electrónico", type = "email", required = TRUE, ns = ns),
+              racafeInputText("celular", "Celular", type = "tel", ns = ns)
+            ),
+            racafeInputSelect("documentos", "Documentos a incluir", choices = .SOL_DOCUMENTOS,
+                              selected = unname(.SOL_DOCUMENTOS), multiple = TRUE, empty = FALSE,
+                              gender = "m", ns = ns),
+            racafeInputNumeric("vigencia_dias", "Vigencia del enlace en días", value = DOCUMENTOS_VIGENCIA_DIAS,
+                               format = "integer", min = 1, max = 30, ns = ns),
+            racafeFormFooter(racafeButton("crear_solicitud", "Crear solicitud", icon = "folder-plus", ns = ns))
+          )
         )
-      )
-    ),
-    column(width = 6, racafePanel("Compartir con el tercero", uiOutput(ns("compartir_individual"))))
+      ),
+      column(width = 6, racafePanel("Compartir con el tercero", uiOutput(ns("compartir_individual"))))
+    )
   )
 }
 
 .sol_masiva_ui <- function(ns) {
-  fluidRow(
-    column(
-      width = 6,
-      racafePanel(
-        "Archivo de solicitudes",
-        racafeInputFile("archivo_masivo", "Archivo Excel", accept = ".xlsx",
-                        max_size = .SOL_MAX_ARCHIVO, help = "Máximo 100 solicitudes por archivo.", ns = ns),
-        p("Columnas: Nombre, TipoDocumento, NumeroDocumento, Correo, Celular, Documentos y VigenciaDias. ",
-          "Separe varios documentos con |."),
-        racafeFormFooter(
-          racafeButtonDownload("plantilla_masiva", "Descargar plantilla", icon = "file-excel", ns = ns),
-          racafeButton("procesar_masivo", "Crear y enviar solicitudes", icon = "paper-plane", ns = ns)
+  tagList(
+    tags$div(class = "documentos-cajas-row"),
+    fluidRow(
+      column(
+        width = 6,
+        racafePanel(
+          "Archivo de solicitudes",
+          racafeInputFile("archivo_masivo", "Archivo Excel", accept = ".xlsx",
+                          max_size = .SOL_MAX_ARCHIVO, help = "Máximo 100 solicitudes por archivo.", ns = ns),
+          p("Columnas: Nombre, TipoDocumento, NumeroDocumento, Correo, Celular, Documentos y VigenciaDias. ",
+            "Separe varios documentos con |."),
+          racafeFormFooter(
+            racafeButtonDownload("plantilla_masiva", "Descargar plantilla", icon = "file-excel", ns = ns),
+            racafeButton("procesar_masivo", "Crear y enviar solicitudes", icon = "paper-plane", ns = ns)
+          )
         )
-      )
-    ),
-    column(width = 6, racafePanel("Resultado del envío", uiOutput(ns("resultado_masivo"))))
+      ),
+      column(width = 6, racafePanel("Resultado del envío", uiOutput(ns("resultado_masivo"))))
+    )
   )
 }
 
@@ -81,8 +87,8 @@ SolicitudesUI <- function(id) {
       "Código QR",
       tags$img(src = resultado$qr, alt = paste("QR", resultado$codigo), width = "180", height = "180"),
       racafeActionBar(
-        right = tagList(
-          racafeCopyButton("copiar_qr", "Copiar QR", image = resultado$qr, ns = ns),
+        left = tagList(
+          racafeCopyButton("copiar_qr", "Copiar QR", image = resultado$qr, notify = TRUE, ns = ns),
           racafeButton("ampliar_qr", "Ampliar QR", icon = "expand", variant = "secondary", ns = ns)
         )
       )
@@ -90,7 +96,7 @@ SolicitudesUI <- function(id) {
     racafeDetailSection(
       "Enlace para compartir",
       racafeInputReadOnly("enlace_solicitud", "Enlace", value = resultado$enlace,
-                          copyable = TRUE, multiline = TRUE, ns = ns)
+                          copyable = TRUE, multiline = FALSE, ns = ns)
     ),
     racafeDetailSection(
       "Correo",
@@ -115,6 +121,8 @@ SolicitudesServer <- function(id, usuario, recarga) {
     solicitud_activa <- reactiveVal(NULL)
     pendiente_masivo <- reactiveVal(NULL)
     resultado_masivo <- reactiveVal(NULL)
+    enviando_correo <- reactiveVal(FALSE)
+    loader_correo <- racafeShiny::racafeLoader(session, type = "enviar", text = "Enviando correo…")
 
     output$compartir_individual <- renderUI(.sol_compartir_ui(solicitud_activa(), session$ns))
 
@@ -151,16 +159,25 @@ SolicitudesServer <- function(id, usuario, recarga) {
     })
 
     observeEvent(input$confirmar_envio, {
-      if (!isTRUE(input$confirmar_envio) || is.null(solicitud_activa())) return(invisible(NULL))
-      tryCatch({
-        resultado <- .sol_enviar(solicitud_activa(), usuario())
-        solicitud_activa(resultado)
-        recarga(recarga() + 1L)
-        tipo <- if (identical(resultado$estado_correo, "ENVIADO")) "success" else "warning"
-        racafeNotify(session, "Resultado del envío", resultado$detalle_correo, type = tipo)
-      }, error = function(e) {
-        racafeNotify(session, "No fue posible enviar el correo", conditionMessage(e), type = "error")
-      })
+      if (!isTRUE(input$confirmar_envio) || is.null(solicitud_activa()) || enviando_correo()) {
+        return(invisible(NULL))
+      }
+      enviando_correo(TRUE)
+      loader_correo$show()
+      session$onFlushed(function() {
+        tryCatch({
+          resultado <- .sol_enviar(solicitud_activa(), usuario())
+          solicitud_activa(resultado)
+          recarga(recarga() + 1L)
+          tipo <- if (identical(resultado$estado_correo, "ENVIADO")) "success" else "warning"
+          racafeNotify(session, "Resultado del envío", resultado$detalle_correo, type = tipo)
+        }, error = function(e) {
+          racafeNotify(session, "No fue posible enviar el correo", conditionMessage(e), type = "error")
+        }, finally = {
+          enviando_correo(FALSE)
+          loader_correo$hide()
+        })
+      }, once = TRUE)
     }, ignoreInit = TRUE)
 
     observeEvent(input$ampliar_qr, {
@@ -172,7 +189,8 @@ SolicitudesServer <- function(id, usuario, recarga) {
         title = paste("Código QR", resultado$codigo), size = "subventana3",
         footer = racafeModalFooter(
           modalButton("Cerrar"),
-          racafeCopyButton("copiar_qr_modal", "Copiar QR", image = resultado$qr, ns = session$ns)
+          racafeCopyButton("copiar_qr_modal", "Copiar QR", image = resultado$qr,
+                           notify = TRUE, ns = session$ns)
         )
       ))
     })
