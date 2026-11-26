@@ -127,9 +127,13 @@ SolicitudesServer <- function(id, usuario, recarga) {
     registrar_copia <- function(resultado_copia, tipo) {
       .sol_notificar_copia(session, resultado_copia, tipo)
       if (!isTRUE(resultado_copia$success) || is.null(solicitud_activa())) return(invisible(NULL))
-      resultado <- .sol_registrar_comparticion(solicitud_activa(), usuario(), tipo)
-      solicitud_activa(resultado)
-      recarga(recarga() + 1L)
+      tryCatch({
+        resultado <- .sol_registrar_comparticion(solicitud_activa(), usuario(), tipo)
+        solicitud_activa(resultado)
+        recarga(recarga() + 1L)
+      }, error = function(e) {
+        racafeNotify(session, "Copia realizada sin registro", conditionMessage(e), type = "warning")
+      })
       invisible(NULL)
     }
 
