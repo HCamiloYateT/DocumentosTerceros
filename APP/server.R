@@ -13,8 +13,12 @@ function(input, output, session) {
   })
 
   output$identidad <- shiny::renderUI({
-    badges <- lapply(grupo(), function(x) shiny::tags$span(class = "badge badge-secondary", x))
-    shiny::tagList(shiny::tags$span(usuario()), shiny::tags$span(" | "), badges)
+    badges <- lapply(grupo(), function(x) shiny::tags$span(class = "badge badge-secondary ml-1", x))
+    shiny::tagList(
+      shiny::tags$span(class = "text-muted", usuario()),
+      shiny::tags$span(class = "text-muted", " | "),
+      badges
+    )
   })
 
   shiny::observeEvent(input$BTN_Actualizar, {
