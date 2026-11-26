@@ -69,7 +69,9 @@ SolicitudesUI <- function(id) {
         )
       )
     ),
-    racafeForms::racafePanel("Solicitudes", reactable::reactableOutput(ns("tabla")))
+    racafeForms::racafePanel(
+      "Solicitudes", racafeModulos::TablaVancouverUI(ns("tabla"), descargable = TRUE)
+    )
   )
 }
 SolicitudesServer <- function(id, usuario, recarga) {
@@ -80,6 +82,12 @@ SolicitudesServer <- function(id, usuario, recarga) {
       recarga()
       local_trigger()
       ListarSolicitudes()
+    })
+
+    datos_tabla <- shiny::reactive({
+      solicitudes() %>%
+        dplyr::select(CodigoSolicitud, CodigoTercero, TipoProceso, Responsable, CreadoPor, CreadoEn, EnviadoEn,
+                      VenceEn, Estado, RequisitosCompletos, TotalRequisitos, PorcentajeCompletitud)
     })
 
     shiny::observe({
@@ -136,21 +144,14 @@ SolicitudesServer <- function(id, usuario, recarga) {
       })
     })
 
-    output$tabla <- reactable::renderReactable({
-      datos <- solicitudes() %>%
-        dplyr::select(CodigoSolicitud, CodigoTercero, TipoProceso, Responsable, CreadoPor, CreadoEn, EnviadoEn,
-                      VenceEn, Estado, RequisitosCompletos, TotalRequisitos, PorcentajeCompletitud)
-      reactable::reactable(
-        datos, searchable = TRUE, filterable = TRUE, defaultPageSize = 10, highlight = TRUE,
-        columns = list(
-          CreadoEn = reactable::colDef(name = "Creada", format = reactable::colFormat(datetime = TRUE)),
-          EnviadoEn = reactable::colDef(name = "Enviada", format = reactable::colFormat(datetime = TRUE)),
-          VenceEn = reactable::colDef(name = "Vence", format = reactable::colFormat(datetime = TRUE)),
-          PorcentajeCompletitud = reactable::colDef(
-            name = "Completitud", format = reactable::colFormat(digits = 1, suffix = "%")
-          )
-        ), language = reactable::reactableLang(searchPlaceholder = "Buscar", noData = "No hay solicitudes")
+    racafeModulos::TablaVancouver(
+      "tabla", data = datos_tabla, page_size = 10, nombre_archivo = "solicitudes",
+      col_labels = c(CreadoEn = "Creada", EnviadoEn = "Enviada", VenceEn = "Vence"),
+      col_specs = list(
+        PorcentajeCompletitud = list(
+          name = "Completitud", format = list(digits = 1, suffix = "%")
+        )
       )
-    })
+    )
   })
 }
