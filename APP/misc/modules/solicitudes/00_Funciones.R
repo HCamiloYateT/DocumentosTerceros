@@ -42,16 +42,64 @@
   unique(nombres[!is.na(nombres)])
 }
 
-.sol_render_correo <- function(datos, enlace, vencimiento) {
-  config <- racafeMailConfig()
-  racafeMailRender(
-    "invitacion",
-    list(
-      nombre = datos$nombre, enlace = enlace, vencimiento = vencimiento,
-      documentos = .sol_nombres_documentos(datos$documentos)
-    ),
-    config = config
+.sol_datos_correo <- function(datos, enlace, vencimiento) {
+  list(
+    asunto = "Racafé | Solicitud de documentación para creación de tercero",
+    preencabezado = "Documentación para creación de tercero",
+    categoria = "Gestión de terceros",
+    bloques = list(
+      list(tipo = "saludo", nombre = datos$nombre),
+      list(
+        tipo = "parrafo",
+        texto = paste(
+          "Racafé & Cía. S.C.A. se encuentra realizando el proceso de creación o actualización",
+          "de su registro como tercero en nuestros sistemas."
+        )
+      ),
+      list(
+        tipo = "parrafo",
+        texto = "Para continuar con el proceso, diligencie o adjunte los siguientes documentos:"
+      ),
+      list(
+        tipo = "lista", titulo = "Documentos requeridos:",
+        items = .sol_nombres_documentos(datos$documentos)
+      ),
+      list(
+        tipo = "parrafo",
+        texto = "Ingrese a la solicitud mediante el siguiente enlace:"
+      ),
+      list(tipo = "boton", etiqueta = "Abrir solicitud de documentación", enlace = enlace),
+      list(tipo = "destacado", texto = paste("Vigencia del enlace:", vencimiento, "(hora de Colombia).")),
+      list(
+        tipo = "parrafo",
+        texto = paste(
+          "El enlace es personal y no debe compartirse. Podrá solicitarse un código de verificación",
+          "enviado al correo registrado."
+        )
+      ),
+      list(tipo = "parrafo", texto = "Cordialmente,")
+    )
   )
+}
+
+.sol_render_correo <- function(datos, enlace, vencimiento) {
+  racafeMailRender("personalizado", .sol_datos_correo(datos, enlace, vencimiento),
+                   config = racafeMailConfig())
+}
+
+.sol_notificar_copia <- function(session, resultado, tipo = c("qr", "enlace")) {
+  tipo <- match.arg(tipo)
+  textos <- switch(
+    tipo,
+    qr = c("Código QR copiado", "El código QR fue copiado al portapapeles."),
+    enlace = c("Enlace copiado", "El enlace fue copiado al portapapeles.")
+  )
+  if (isTRUE(resultado$success)) {
+    racafeNotify(session, textos[1L], textos[2L], type = "success")
+  } else {
+    racafeNotify(session, "No fue posible copiar", "Revise los permisos del portapapeles.", type = "error")
+  }
+  invisible(NULL)
 }
 
 .sol_crear <- function(datos, usuario) {
@@ -78,10 +126,10 @@
   config <- racafeMailConfig()
   error_envio <- NULL
   tryCatch(
-    racafeMailInvitacion(
-      para = resultado$correo_destino, nombre = resultado$datos$nombre,
-      enlace = resultado$enlace, vencimiento = vencimiento, config = config,
-      documentos = .sol_nombres_documentos(resultado$datos$documentos)
+    racafeMailEnviar(
+      para = resultado$correo_destino, plantilla = "personalizado",
+      datos = .sol_datos_correo(resultado$datos, resultado$enlace, vencimiento),
+      config = config
     ),
     error = function(e) error_envio <<- conditionMessage(e)
   )
