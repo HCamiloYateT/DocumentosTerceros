@@ -1,8 +1,12 @@
 body <- bs4Dash::bs4DashBody(
   .recursos_compartidos,
-  racafeShiny::racafeLoaderUI(startup = FALSE, busy = TRUE,
-                              triggers = c(actualizar = "BTN_Actualizar", guardar = "solicitudes-crear",
-                                           enviar = "solicitudes-registrar_envio")),
+  racafeShiny::racafeLoaderUI(
+    startup = FALSE, busy = TRUE,
+    triggers = c(
+      actualizar = "BTN_Actualizar", enviar = "solicitudes-crear_enviar",
+      guardar = "solicitudes-procesar_masivo"
+    )
+  ),
   bs4Dash::bs4TabItems(
     bs4Dash::bs4TabItem(tabName = "IN_Inicio", shiny::tags$main(class = "documentos-main", InicioUI("inicio"))),
     bs4Dash::bs4TabItem(tabName = "SO_Solicitudes",
