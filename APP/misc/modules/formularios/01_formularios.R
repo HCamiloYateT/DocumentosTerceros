@@ -6,8 +6,7 @@
 
 .formularios_campos_vacios <- function() .FOR_HABEAS_PREDETERMINADO$campos[0, , drop = FALSE]
 
-FormulariosUI <- function(id) {
-  ns <- NS(id)
+.formularios_contenido_ui <- function(ns) {
   tagList(
     tags$div(class = "documentos-cajas-row"),
     fluidRow(
@@ -72,10 +71,26 @@ FormulariosUI <- function(id) {
   )
 }
 
-FormulariosServer <- function(id, usuario, recarga) {
+FormulariosUI <- function(id) {
+  ns <- NS(id)
+  uiOutput(ns("contenido"))
+}
+
+FormulariosServer <- function(id, usuario, grupo, recarga) {
   moduleServer(id, function(input, output, session) {
     campos <- reactiveVal(.formularios_campos_vacios())
     pendiente_guardar <- reactiveVal(NULL)
+
+    autorizado <- reactive(any(grupo() %in% c("ANALÍTICA", "ANALITICA")))
+    output$contenido <- renderUI({
+      if (!autorizado()) {
+        return(racafePanel(
+          "Acceso restringido",
+          p("La administración de formularios está disponible únicamente para el grupo ANALÍTICA.")
+        ))
+      }
+      .formularios_contenido_ui(session$ns)
+    })
 
     cargar_formulario <- function(codigo) {
       formulario <- ObtenerFormularioCatalogo(codigo)
@@ -194,6 +209,10 @@ FormulariosServer <- function(id, usuario, recarga) {
     })
 
     observeEvent(input$confirmar_guardado, {
+      if (!autorizado()) {
+        racafeNotify(session, "Acceso restringido", "No tiene permisos para administrar formularios.", type = "error")
+        return(invisible(NULL))
+      }
       if (!isTRUE(input$confirmar_guardado) || is.null(pendiente_guardar())) return(invisible(NULL))
       tryCatch({
         formulario <- GuardarFormularioCatalogo(pendiente_guardar(), usuario())
