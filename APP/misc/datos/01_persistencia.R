@@ -163,7 +163,7 @@ CrearTercero <- function(datos, usuario) {
 }
 
 CrearSolicitud <- function(codigo_tercero, tipo_proceso, usuario,
-                           requisitos = .REQUISITOS_BASE$CodigoRequisito) {
+                           requisitos = ListarRequisitosDisponibles()$CodigoRequisito) {
   codigo_tercero <- .ValidarCodigoRuta(codigo_tercero, "código de tercero")
   if (!tipo_proceso %in% c("VINCULACION", "ACTUALIZACION")) stop("Tipo de proceso no válido.", call. = FALSE)
 
@@ -181,7 +181,7 @@ CrearSolicitud <- function(codigo_tercero, tipo_proceso, usuario,
       )
     }
     requisitos_indice <- ListarRequisitosSolicitudes()
-    seleccion <- dplyr::filter(.REQUISITOS_BASE, CodigoRequisito %in% requisitos)
+    seleccion <- dplyr::filter(ListarRequisitosDisponibles(), CodigoRequisito %in% requisitos)
     if (!nrow(seleccion)) stop("Seleccione al menos un requisito.", call. = FALSE)
 
     ahora <- as.POSIXct(Sys.time(), tz = "UTC")
