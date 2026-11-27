@@ -10,6 +10,7 @@
   let sessionToken = sessionStorage.getItem(`documentos:${requestCode}`) || '';
   let requestData = null;
   let resendTimer = null;
+  const selectedFiles = new Map();
 
   const setStatus = (id, message, state = '') => {
     const element = $(id);
@@ -135,36 +136,53 @@
     }
   };
 
-  const selectFile = event => {
-    const input = event.currentTarget;
-    const code = input.dataset.file;
-    const file = input.files[0];
+  const setSelectedFile = (code, file) => {
+    const input = document.querySelector(`[data-file="${code}"]`);
     const label = document.querySelector(`[data-file-name="${code}"]`);
     const button = document.querySelector(`[data-upload="${code}"]`);
+    const clear = document.querySelector(`[data-clear-file="${code}"]`);
     button.disabled = true;
     if (!file) {
+      selectedFiles.delete(code);
+      input.value = '';
       label.textContent = 'Ningún archivo seleccionado';
+      clear.hidden = true;
       return;
     }
     if (file.type !== 'application/pdf' || !file.name.toLowerCase().endsWith('.pdf')) {
       input.value = '';
       label.textContent = 'Seleccione un archivo PDF válido.';
+      clear.hidden = true;
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
       input.value = '';
       label.textContent = 'El archivo supera el límite de 15 MB.';
+      clear.hidden = true;
       return;
     }
+    selectedFiles.set(code, file);
     label.textContent = file.name;
+    clear.hidden = false;
     button.disabled = false;
+  };
+
+  const selectFile = event => {
+    const input = event.currentTarget;
+    setSelectedFile(input.dataset.file, input.files[0]);
+  };
+
+  const dropFile = event => {
+    event.preventDefault();
+    const dropzone = event.currentTarget;
+    delete dropzone.dataset.dragging;
+    setSelectedFile(dropzone.dataset.dropzone, event.dataTransfer.files[0]);
   };
 
   const uploadFile = async event => {
     const button = event.currentTarget;
     const code = button.dataset.upload;
-    const input = document.querySelector(`[data-file="${code}"]`);
-    const file = input.files[0];
+    const file = selectedFiles.get(code);
     if (!file) return;
     if (previewMode) {
       setStatus('request-status', 'Vista previa: el archivo seleccionado no fue enviado ni almacenado.', 'success');
@@ -216,6 +234,18 @@
     $('resend-otp').addEventListener('click', requestOtp);
     $('otp-form').addEventListener('submit', verifyOtp);
     document.querySelectorAll('[data-file]').forEach(input => input.addEventListener('change', selectFile));
+    document.querySelectorAll('[data-dropzone]').forEach(dropzone => {
+      dropzone.addEventListener('dragenter', event => {
+        event.preventDefault();
+        dropzone.dataset.dragging = 'true';
+      });
+      dropzone.addEventListener('dragover', event => event.preventDefault());
+      dropzone.addEventListener('dragleave', () => delete dropzone.dataset.dragging);
+      dropzone.addEventListener('drop', dropFile);
+    });
+    document.querySelectorAll('[data-clear-file]').forEach(button => {
+      button.addEventListener('click', () => setSelectedFile(button.dataset.clearFile, null));
+    });
     document.querySelectorAll('[data-upload]').forEach(button => button.addEventListener('click', uploadFile));
     $('open-authorization').addEventListener('click', openAuthorization);
     $('submit-request').addEventListener('click', submitRequest);
