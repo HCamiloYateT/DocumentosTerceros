@@ -148,6 +148,17 @@ p { margin: 0 0 16px; }
 .authorization-options legend { margin-bottom: 12px; font-weight: 700; }
 .authorization-options label, .acceptance-check { display: flex; align-items: flex-start; gap: 10px; }
 .authorization-options input, .acceptance-check input { width: 17px; height: 17px; margin: 3px 0 0; accent-color: var(--racafe-red); }
+.authorization-field { display: grid; gap: 7px; font-weight: 600; }
+.authorization-field-casilla { display: flex; align-items: flex-start; gap: 10px; font-weight: 400; }
+.authorization-field input[type="text"], .authorization-field textarea, .authorization-field select {
+  width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+  background: #fff; color: var(--ink); font: inherit;
+}
+.authorization-field textarea { resize: vertical; }
+.authorization-field small { color: var(--muted); font-weight: 400; }
+.authorization-field input:focus, .authorization-field textarea:focus, .authorization-field select:focus {
+  outline: 2px solid rgba(218, 41, 28, .18); border-color: var(--racafe-red);
+}
 
 .acceptance-check { padding-top: 18px; border-top: 1px solid var(--line); }
 .dialog-actions { margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px; }

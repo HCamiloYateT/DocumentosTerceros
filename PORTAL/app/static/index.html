@@ -138,21 +138,7 @@
           <p>Diligencie cada formulario por separado. La firma se registrará una sola vez al finalizar.</p>
         </div>
 
-        <div class="form-list">
-          <article class="form-item" data-requirement="FORM_HABEAS">
-            <div class="step-number" aria-hidden="true">03</div>
-            <div class="form-copy">
-              <div class="form-title-line">
-                <h3>Autorización de tratamiento de datos</h3>
-                <span class="badge">Pendiente</span>
-              </div>
-              <p>Revise la autorización, confirme las finalidades y guarde el formulario.</p>
-            </div>
-            <button id="open-authorization" class="button button-primary" type="button">
-              Diligenciar formulario
-            </button>
-          </article>
-        </div>
+        <div id="form-list" class="form-list"></div>
       </section>
 
       <section class="signature-section" aria-labelledby="signature-title">
@@ -210,21 +196,16 @@
         <button id="close-authorization" class="dialog-close" type="button" aria-label="Cerrar">×</button>
       </div>
 
-      <p class="dialog-intro">
+      <p id="authorization-description" class="dialog-intro">
         Revise la información y confirme las finalidades autorizadas antes de guardar el formulario.
       </p>
 
       <div class="authorization-summary">
-        <div><span>Nombre o razón social</span><strong>Empresa de ejemplo S.A.S.</strong></div>
-        <div><span>Identificación</span><strong>NIT 900123456</strong></div>
+        <div><span>Nombre o razón social</span><strong id="authorization-name">—</strong></div>
+        <div><span>Identificación</span><strong id="authorization-identification">—</strong></div>
       </div>
 
-      <fieldset class="authorization-options">
-        <legend>Finalidades de la autorización</legend>
-        <label><input type="checkbox" checked> Validar la información suministrada para la creación del tercero.</label>
-        <label><input type="checkbox" checked> Consultar fuentes públicas y listas de control aplicables.</label>
-        <label><input type="checkbox"> Recibir comunicaciones relacionadas con la relación comercial.</label>
-      </fieldset>
+      <div id="authorization-fields" class="authorization-options"></div>
 
       <div class="dialog-actions">
         <button id="cancel-authorization" class="button button-secondary" type="button">Volver</button>
