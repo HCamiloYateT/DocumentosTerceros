@@ -29,7 +29,8 @@ async def security_headers(request, call_next):
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; img-src 'self' data:; style-src 'self'; "
-        "script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+        "script-src 'self'; connect-src 'self'; frame-src 'self' blob:; "
+        "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
     return response
 
@@ -54,3 +55,4 @@ def config():
             "allowed_file_types": ["application/pdf"],
         }
     )
+

@@ -15,6 +15,7 @@
   const signatureStrokes = [];
   let signatureContext = null;
   let activeSignatureStroke = null;
+  let activePdfUrl = '';
 
   const setStatus = (id, message, state = '') => {
     const element = $(id);
@@ -350,33 +351,29 @@
     }
   };
 
+  const previewPurposes = [
+    'Efectuar las gestiones pertinentes para cumplir el contrato y gestionar trámites de PQR.',
+    'Realizar verificación y reporte en centrales de riesgo y usos estadísticos, tributarios, contables, financieros y legales.',
+    'Publicar su imagen en medios físicos o digitales, sitios web, redes sociales y publicaciones corporativas.',
+    'Personalizar productos y extender ofertas por medios electrónicos, página web, WhatsApp y redes sociales.',
+    'Personalizar productos y extender ofertas mediante llamadas, correo electrónico y mensajes de texto.',
+    'Efectuar encuestas de satisfacción y extender ofertas directamente o mediante mercadeo relacional.',
+    'Transferir o transmitir datos para fines estadísticos, comerciales, informativos, de seguimiento y contacto.',
+    'Transferir información de la actividad desarrollada para cumplir estándares de sostenibilidad e internacionales.',
+    'Transferir información personal, comercial y financiera a entidades financieras y aliados estratégicos.',
+    'Grabar llamadas de la relación comercial para control de calidad, análisis y mejora de procesos.'
+  ];
+
   const previewForm = code => ({
     formulario: {
       codigo: code,
-      nombre: 'Autorización para el tratamiento de datos personales',
-      descripcion: [
-        'Autorizo de manera previa, expresa e informada a Racafé & Cía. S.C.A. para recolectar, almacenar,',
-        'usar, circular, actualizar y suprimir mis datos personales conforme a su política de tratamiento',
-        'de información y a las finalidades indicadas a continuación.'
-      ].join(' '),
-      version: 1,
-      campos: [
-        {
-          codigo: 'AUTORIZA_CREACION',
-          etiqueta: 'Autoriza el tratamiento de la información para crear o actualizar el tercero.',
-          tipo: 'CASILLA', obligatorio: true, opciones: '', ayuda: ''
-        },
-        {
-          codigo: 'AUTORIZA_VALIDACION',
-          etiqueta: 'Autoriza consultar fuentes públicas, listas de control y validaciones aplicables.',
-          tipo: 'CASILLA', obligatorio: true, opciones: '', ayuda: ''
-        },
-        {
-          codigo: 'AUTORIZA_COMUNICACIONES',
-          etiqueta: 'Autoriza recibir comunicaciones relacionadas con la relación comercial.',
-          tipo: 'CASILLA', obligatorio: false, opciones: '', ayuda: 'Esta autorización es opcional.'
-        }
-      ]
+      codigo_documento: 'FT-GN-05',
+      nombre: 'Autorización tratamiento de datos personales proveedores – clientes',
+      descripcion: 'Seleccione SI o NO para cada finalidad indicada en el formato oficial.',
+      version: 7,
+      finalidades: previewPurposes.map((label, index) => ({
+        numero: index + 1, codigo: `FINALIDAD_${String(index + 1).padStart(2, '0')}`, etiqueta: label
+      }))
     },
     respuestas: null
   });
@@ -386,64 +383,63 @@
     const saved = payload.respuestas && payload.respuestas.respuestas ? payload.respuestas.respuestas : {};
     activeFormCode = form.codigo;
     $('authorization-title').textContent = form.nombre;
-    $('authorization-description').textContent = form.descripcion;
+    $('authorization-description').textContent =
+      form.descripcion || 'Seleccione SI o NO para cada finalidad indicada en el formato oficial.';
+    $('authorization-document-code').textContent = form.codigo_documento;
+    $('authorization-version').textContent = `Versión ${form.version}`;
     $('authorization-name').textContent = requestData.tercero.nombre_razon_social;
     $('authorization-identification').textContent =
       `${requestData.tercero.tipo_identificacion} ${requestData.tercero.numero_identificacion}`;
 
     const container = $('authorization-fields');
-    container.textContent = '';
-    form.campos.forEach(field => {
-      const wrapper = document.createElement('label');
-      wrapper.className = `authorization-field authorization-field-${field.tipo.toLowerCase()}`;
-      const id = `form-field-${field.codigo}`;
-      let control;
-
-      if (field.tipo === 'CASILLA') {
-        control = document.createElement('input');
-        control.type = 'checkbox';
-        control.checked = saved[field.codigo] === true;
-        const text = document.createElement('span');
-        text.textContent = field.etiqueta;
-        wrapper.append(control, text);
-      } else {
-        const text = document.createElement('span');
-        text.textContent = field.etiqueta;
-        wrapper.append(text);
-        if (field.tipo === 'TEXTO_LARGO') {
-          control = document.createElement('textarea');
-          control.rows = 4;
-        } else if (field.tipo === 'SELECCION') {
-          control = document.createElement('select');
-          const empty = document.createElement('option');
-          empty.value = '';
-          empty.textContent = 'Seleccione una opción';
-          control.append(empty);
-          String(field.opciones || '').split('|').map(value => value.trim()).filter(Boolean).forEach(value => {
-            const option = document.createElement('option');
-            option.value = value;
-            option.textContent = value;
-            control.append(option);
-          });
-        } else {
-          control = document.createElement('input');
-          control.type = 'text';
-        }
-        control.value = saved[field.codigo] || '';
-        wrapper.append(control);
-      }
-
-      control.id = id;
-      control.dataset.formField = field.codigo;
-      control.dataset.formType = field.tipo;
-      control.required = field.obligatorio === true;
-      if (field.ayuda) {
-        const help = document.createElement('small');
-        help.textContent = field.ayuda;
-        wrapper.append(help);
-      }
-      container.append(wrapper);
+    container.querySelectorAll('.purpose-row').forEach(element => element.remove());
+    form.finalidades.forEach(field => {
+      const row = document.createElement('div');
+      row.className = 'purpose-row';
+      const number = document.createElement('span');
+      number.className = 'purpose-number';
+      number.textContent = String(field.numero).padStart(2, '0');
+      const label = document.createElement('p');
+      label.textContent = field.etiqueta;
+      const choices = document.createElement('div');
+      choices.className = 'purpose-choices';
+      ['SI', 'NO'].forEach(value => {
+        const option = document.createElement('label');
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = `purpose-${field.codigo}`;
+        input.value = value;
+        input.dataset.formField = field.codigo;
+        input.required = true;
+        input.checked = saved[field.codigo] === value;
+        option.append(input, value === 'SI' ? 'Sí' : 'No');
+        choices.append(option);
+      });
+      row.append(number, label, choices);
+      container.append(row);
     });
+  };
+
+  const loadFormPdf = async formCode => {
+    if (activePdfUrl) {
+      URL.revokeObjectURL(activePdfUrl);
+      activePdfUrl = '';
+    }
+    const frame = $('authorization-pdf');
+    const placeholder = $('authorization-pdf-placeholder');
+    frame.hidden = true;
+    placeholder.hidden = false;
+    if (previewMode) return;
+    const headers = new Headers({Authorization: `Bearer ${sessionToken}`});
+    const response = await fetch(
+      `./api/solicitudes/${encodeURIComponent(requestCode)}/formularios/${encodeURIComponent(formCode)}/plantilla`,
+      {headers, credentials: 'same-origin'}
+    );
+    if (!response.ok) throw new Error('No fue posible cargar el PDF oficial.');
+    activePdfUrl = URL.createObjectURL(await response.blob());
+    frame.src = activePdfUrl;
+    frame.hidden = false;
+    placeholder.hidden = true;
   };
 
   const openAuthorization = async formCode => {
@@ -452,6 +448,7 @@
         ? previewForm(formCode)
         : await api(`solicitudes/${encodeURIComponent(requestCode)}/formularios/${encodeURIComponent(formCode)}`);
       renderAuthorization(payload);
+      await loadFormPdf(formCode);
       $('authorization-dialog').showModal();
     } catch (error) {
       setStatus('request-status', error.message, 'error');
@@ -460,9 +457,8 @@
 
   const formAnswers = () => {
     const answers = {};
-    document.querySelectorAll('[data-form-field]').forEach(control => {
-      answers[control.dataset.formField] =
-        control.dataset.formType === 'CASILLA' ? control.checked : control.value.trim();
+    document.querySelectorAll('[data-form-field]:checked').forEach(control => {
+      answers[control.dataset.formField] = control.value;
     });
     return answers;
   };
@@ -509,6 +505,9 @@
     $('submit-request').addEventListener('click', submitRequest);
     $('close-authorization').addEventListener('click', () => $('authorization-dialog').close());
     $('cancel-authorization').addEventListener('click', () => $('authorization-dialog').close());
+    $('open-form-pdf').addEventListener('click', () => {
+      if (activePdfUrl) window.open(activePdfUrl, '_blank', 'noopener');
+    });
     $('authorization-form').addEventListener('submit', async event => {
       event.preventDefault();
       if (!$('authorization-form').reportValidity()) return;
@@ -569,3 +568,4 @@
 
   initialize();
 })();
+

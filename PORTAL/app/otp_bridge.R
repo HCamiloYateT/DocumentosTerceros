@@ -65,23 +65,13 @@
   if (!is.list(answers) || is.null(names(answers)) || any(!nzchar(names(answers)))) {
     .bridge_fail("FORM_INVALID")
   }
-  fields <- form$formulario$campos
+  fields <- form$formulario$finalidades
   codes <- vapply(fields, `[[`, character(1), "codigo")
   if (length(setdiff(names(answers), codes))) .bridge_fail("FORM_INVALID")
-
   for (field in fields) {
-    value <- answers[[field$codigo]]
-    required <- isTRUE(field$obligatorio)
-    if (identical(field$tipo, "CASILLA")) {
-      if (required && !isTRUE(value)) .bridge_fail("FORM_INVALID")
-      next
-    }
-    text <- if (is.null(value) || length(value) != 1L) "" else trimws(as.character(value))
-    if (required && !nzchar(text)) .bridge_fail("FORM_INVALID")
-    if (identical(field$tipo, "SELECCION") && nzchar(text)) {
-      options <- trimws(strsplit(field$opciones, "|", fixed = TRUE)[[1L]])
-      if (!text %in% options) .bridge_fail("FORM_INVALID")
-    }
+    raw_value <- answers[[field$codigo]]
+    value <- if (is.null(raw_value)) "" else toupper(trimws(as.character(raw_value)))
+    if (length(value) != 1L || !value %in% c("SI", "NO")) .bridge_fail("FORM_INVALID")
   }
   invisible(TRUE)
 }
@@ -141,8 +131,10 @@
   if (sum(selected) != 1L) .bridge_fail("FORM_NOT_AVAILABLE")
   requirements$Estado[selected] <- "COMPLETADO"
   requirements$VersionVigente[selected] <- as.integer(form$formulario$version)
+  pdf_path <- file.path(request_dir, "formularios", form_code, "formulario.pdf")
+  if (!file.exists(pdf_path)) .bridge_fail("FORM_INVALID")
   requirements$RutaRelativa[selected] <- file.path(
-    "solicitudes", code, "formularios", form_code, "respuesta.json"
+    "solicitudes", code, "formularios", form_code, "formulario.pdf"
   )
   requirements$ActualizadoEn[selected] <- now
   .bridge_write_rds(requirements, index_path)
@@ -278,3 +270,4 @@ status <- tryCatch({
   1L
 })
 quit(save = "no", status = status, runLast = FALSE)
+
