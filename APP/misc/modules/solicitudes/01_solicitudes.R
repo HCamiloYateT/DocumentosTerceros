@@ -141,6 +141,13 @@ SolicitudesServer <- function(id, usuario, recarga) {
       invisible(NULL)
     }
 
+    observeEvent(recarga(), {
+      opciones <- .sol_requisitos_disponibles()
+      seleccion <- intersect(input$documentos %||% character(), unname(opciones))
+      if (!length(seleccion)) seleccion <- unname(opciones)
+      racafeUpdateSelect(session, "documentos", choices = opciones, selected = seleccion)
+    }, ignoreInit = FALSE)
+
     output$compartir_individual <- renderUI(.sol_compartir_ui(solicitud_activa(), session$ns))
 
     observeEvent(input$copiar_qr_copy_result, {
