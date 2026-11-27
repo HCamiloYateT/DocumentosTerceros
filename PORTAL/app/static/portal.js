@@ -9,6 +9,7 @@
   const previewMode = params.get('vista') === 'previa';
   let sessionToken = sessionStorage.getItem(`documentos:${requestCode}`) || '';
   let requestData = null;
+  let activeFormCode = '';
   let resendTimer = null;
   const selectedFiles = new Map();
   const signatureStrokes = [];
@@ -95,6 +96,44 @@
     }).format(new Date(value));
   };
 
+  const renderFormRequirements = requirements => {
+    const list = $('form-list');
+    list.textContent = '';
+    requirements.forEach((requirement, index) => {
+      if (requirement.tipo !== 'FORMULARIO' && !requirement.codigo.startsWith('FORM_')) return;
+      const article = document.createElement('article');
+      article.className = 'form-item';
+      article.dataset.requirement = requirement.codigo;
+
+      const number = document.createElement('div');
+      number.className = 'step-number';
+      number.setAttribute('aria-hidden', 'true');
+      number.textContent = String(index + 1).padStart(2, '0');
+
+      const copy = document.createElement('div');
+      copy.className = 'form-copy';
+      const titleLine = document.createElement('div');
+      titleLine.className = 'form-title-line';
+      const title = document.createElement('h3');
+      title.textContent = requirement.nombre || requirement.codigo;
+      const badge = document.createElement('span');
+      badge.className = 'badge';
+      titleLine.append(title, badge);
+      const description = document.createElement('p');
+      description.textContent = 'Revise la información solicitada y guarde el formulario.';
+      copy.append(titleLine, description);
+
+      const button = document.createElement('button');
+      button.className = 'button button-primary';
+      button.type = 'button';
+      button.dataset.openForm = requirement.codigo;
+      button.textContent = requirement.estado === 'COMPLETADO' ? 'Revisar formulario' : 'Diligenciar formulario';
+
+      article.append(number, copy, button);
+      list.append(article);
+    });
+  };
+
   const updateRequirement = requirement => {
     const card = document.querySelector(`[data-requirement="${requirement.codigo}"]`);
     if (!card) return;
@@ -111,6 +150,7 @@
     $('third-party-id').textContent = `${data.tercero.tipo_identificacion} ${data.tercero.numero_identificacion}`;
     $('request-expiry').textContent = formatDate(data.vence_en);
     const requestedCodes = new Set(data.requisitos.map(item => item.codigo));
+    renderFormRequirements(data.requisitos);
     document.querySelectorAll('[data-requirement]').forEach(card => {
       card.hidden = !requestedCodes.has(card.dataset.requirement);
     });
@@ -310,12 +350,121 @@
     }
   };
 
-  const openAuthorization = async () => {
-    if (previewMode && typeof $('authorization-dialog').showModal === 'function') {
+  const previewForm = code => ({
+    formulario: {
+      codigo: code,
+      nombre: 'Autorización para el tratamiento de datos personales',
+      descripcion: [
+        'Autorizo de manera previa, expresa e informada a Racafé & Cía. S.C.A. para recolectar, almacenar,',
+        'usar, circular, actualizar y suprimir mis datos personales conforme a su política de tratamiento',
+        'de información y a las finalidades indicadas a continuación.'
+      ].join(' '),
+      version: 1,
+      campos: [
+        {
+          codigo: 'AUTORIZA_CREACION',
+          etiqueta: 'Autoriza el tratamiento de la información para crear o actualizar el tercero.',
+          tipo: 'CASILLA', obligatorio: true, opciones: '', ayuda: ''
+        },
+        {
+          codigo: 'AUTORIZA_VALIDACION',
+          etiqueta: 'Autoriza consultar fuentes públicas, listas de control y validaciones aplicables.',
+          tipo: 'CASILLA', obligatorio: true, opciones: '', ayuda: ''
+        },
+        {
+          codigo: 'AUTORIZA_COMUNICACIONES',
+          etiqueta: 'Autoriza recibir comunicaciones relacionadas con la relación comercial.',
+          tipo: 'CASILLA', obligatorio: false, opciones: '', ayuda: 'Esta autorización es opcional.'
+        }
+      ]
+    },
+    respuestas: null
+  });
+
+  const renderAuthorization = payload => {
+    const form = payload.formulario;
+    const saved = payload.respuestas && payload.respuestas.respuestas ? payload.respuestas.respuestas : {};
+    activeFormCode = form.codigo;
+    $('authorization-title').textContent = form.nombre;
+    $('authorization-description').textContent = form.descripcion;
+    $('authorization-name').textContent = requestData.tercero.nombre_razon_social;
+    $('authorization-identification').textContent =
+      `${requestData.tercero.tipo_identificacion} ${requestData.tercero.numero_identificacion}`;
+
+    const container = $('authorization-fields');
+    container.textContent = '';
+    form.campos.forEach(field => {
+      const wrapper = document.createElement('label');
+      wrapper.className = `authorization-field authorization-field-${field.tipo.toLowerCase()}`;
+      const id = `form-field-${field.codigo}`;
+      let control;
+
+      if (field.tipo === 'CASILLA') {
+        control = document.createElement('input');
+        control.type = 'checkbox';
+        control.checked = saved[field.codigo] === true;
+        const text = document.createElement('span');
+        text.textContent = field.etiqueta;
+        wrapper.append(control, text);
+      } else {
+        const text = document.createElement('span');
+        text.textContent = field.etiqueta;
+        wrapper.append(text);
+        if (field.tipo === 'TEXTO_LARGO') {
+          control = document.createElement('textarea');
+          control.rows = 4;
+        } else if (field.tipo === 'SELECCION') {
+          control = document.createElement('select');
+          const empty = document.createElement('option');
+          empty.value = '';
+          empty.textContent = 'Seleccione una opción';
+          control.append(empty);
+          String(field.opciones || '').split('|').map(value => value.trim()).filter(Boolean).forEach(value => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            control.append(option);
+          });
+        } else {
+          control = document.createElement('input');
+          control.type = 'text';
+        }
+        control.value = saved[field.codigo] || '';
+        wrapper.append(control);
+      }
+
+      control.id = id;
+      control.dataset.formField = field.codigo;
+      control.dataset.formType = field.tipo;
+      control.required = field.obligatorio === true;
+      if (field.ayuda) {
+        const help = document.createElement('small');
+        help.textContent = field.ayuda;
+        wrapper.append(help);
+      }
+      container.append(wrapper);
+    });
+  };
+
+  const openAuthorization = async formCode => {
+    try {
+      const payload = previewMode
+        ? previewForm(formCode)
+        : await api(`solicitudes/${encodeURIComponent(requestCode)}/formularios/${encodeURIComponent(formCode)}`);
+      renderAuthorization(payload);
       $('authorization-dialog').showModal();
-      return;
+    } catch (error) {
+      setStatus('request-status', error.message, 'error');
     }
-    setStatus('request-status', 'La autorización se habilitará al integrar el formulario firmado.', 'error');
+  };
+
+  const formAnswers = () => {
+    const answers = {};
+    document.querySelectorAll('[data-form-field]').forEach(control => {
+      answers[control.dataset.formField] =
+        control.dataset.formType === 'CASILLA' ? control.checked : control.value.trim();
+    });
+    return answers;
   };
 
   const submitRequest = async () => {
@@ -353,14 +502,33 @@
       button.addEventListener('click', () => setSelectedFile(button.dataset.clearFile, null));
     });
     document.querySelectorAll('[data-upload]').forEach(button => button.addEventListener('click', uploadFile));
-    $('open-authorization').addEventListener('click', openAuthorization);
+    $('form-list').addEventListener('click', event => {
+      const button = event.target.closest('[data-open-form]');
+      if (button) openAuthorization(button.dataset.openForm);
+    });
     $('submit-request').addEventListener('click', submitRequest);
     $('close-authorization').addEventListener('click', () => $('authorization-dialog').close());
     $('cancel-authorization').addEventListener('click', () => $('authorization-dialog').close());
-    $('authorization-form').addEventListener('submit', event => {
+    $('authorization-form').addEventListener('submit', async event => {
       event.preventDefault();
-      $('authorization-dialog').close();
-      setStatus('request-status', 'Vista previa: el formulario fue diligenciado, pero no se guardó.', 'success');
+      if (!$('authorization-form').reportValidity()) return;
+      if (previewMode) {
+        $('authorization-dialog').close();
+        setStatus('request-status', 'Vista previa: el formulario fue diligenciado, pero no se guardó.', 'success');
+        return;
+      }
+      setStatus('request-status', 'Guardando formulario…');
+      try {
+        await api(
+          `solicitudes/${encodeURIComponent(requestCode)}/formularios/${encodeURIComponent(activeFormCode)}`,
+          {method: 'POST', body: JSON.stringify({respuestas: formAnswers()})}
+        );
+        $('authorization-dialog').close();
+        setStatus('request-status', 'Formulario guardado correctamente.', 'success');
+        await loadRequest();
+      } catch (error) {
+        setStatus('request-status', error.message, 'error');
+      }
     });
     initializeSignature();
 
@@ -376,9 +544,15 @@
           numero_identificacion: '900123456'
         },
         requisitos: [
-          {codigo: 'DOC_RUT', estado: 'COMPLETADO'},
-          {codigo: 'DOC_CERL', estado: 'PENDIENTE'},
-          {codigo: 'FORM_HABEAS', estado: 'PENDIENTE'}
+          {codigo: 'DOC_RUT', tipo: 'DOCUMENTO', nombre: 'RUT', estado: 'COMPLETADO'},
+          {
+            codigo: 'DOC_CERL', tipo: 'DOCUMENTO',
+            nombre: 'Certificado de existencia y representación legal', estado: 'PENDIENTE'
+          },
+          {
+            codigo: 'FORM_HABEAS', tipo: 'FORMULARIO',
+            nombre: 'Autorización de tratamiento de datos personales', estado: 'PENDIENTE'
+          }
         ]
       });
       return;
