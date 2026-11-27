@@ -16,6 +16,11 @@
   trimws(as.character(x[1L]))
 }
 
+.sol_requisitos_disponibles <- function() {
+  requisitos <- ListarRequisitosDisponibles()
+  stats::setNames(requisitos$CodigoRequisito, requisitos$NombreRequisito)
+}
+
 .sol_datos_tercero <- function(datos) {
   list(
     TipoPersona = if (identical(datos$tipo_documento, "NIT")) "JURIDICA" else "NATURAL",
@@ -38,7 +43,8 @@
 }
 
 .sol_nombres_documentos <- function(codigos) {
-  nombres <- names(.SOL_DOCUMENTOS)[match(codigos, unname(.SOL_DOCUMENTOS))]
+  requisitos <- ListarRequisitosDisponibles()
+  nombres <- requisitos$NombreRequisito[match(codigos, requisitos$CodigoRequisito)]
   unique(nombres[!is.na(nombres)])
 }
 
@@ -219,8 +225,11 @@
 .sol_fila_masiva <- function(datos, i) {
   valor_documentos <- as.character(datos$Documentos[i] %||% "")
   tokens <- toupper(trimws(unlist(strsplit(valor_documentos, "[|,;]"))))
-  documentos <- unname(.SOL_MAPA_DOCUMENTOS[tokens[tokens %in% names(.SOL_MAPA_DOCUMENTOS)]])
-  if (!length(documentos)) documentos <- unname(.SOL_DOCUMENTOS)
+  alias <- unname(.SOL_MAPA_DOCUMENTOS[tokens[tokens %in% names(.SOL_MAPA_DOCUMENTOS)]])
+  disponibles <- unname(.sol_requisitos_disponibles())
+  directos <- tokens[tokens %in% disponibles]
+  documentos <- unique(c(alias, directos))
+  if (!length(documentos)) documentos <- disponibles
   vigencia <- suppressWarnings(as.integer(datos$VigenciaDias[i] %||% DOCUMENTOS_VIGENCIA_DIAS))
   if (is.na(vigencia)) vigencia <- DOCUMENTOS_VIGENCIA_DIAS
   list(
