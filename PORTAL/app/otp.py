@@ -40,6 +40,10 @@ class OtpVerification(BaseModel):
     codigo: str
 
 
+class FormSubmission(BaseModel):
+    respuestas: dict[str, Any]
+
+
 class BridgeError(RuntimeError):
     def __init__(self, code: str):
         super().__init__(code)
@@ -50,6 +54,13 @@ def _request_code(value: str) -> str:
     code = str(value).strip().upper()
     if not REQUEST_PATTERN.fullmatch(code):
         raise HTTPException(status_code=400, detail="La solicitud indicada no es válida.")
+    return code
+
+
+def _form_code(value: str) -> str:
+    code = str(value).strip().upper()
+    if not re.fullmatch(r"FORM_[A-Z0-9_]+", code):
+        raise HTTPException(status_code=400, detail="El formulario indicado no es válido.")
     return code
 
 
@@ -322,3 +333,44 @@ def request_detail(codigo: str, authorization: str | None = Header(default=None)
     if payload is None:
         raise HTTPException(status_code=503, detail="No fue posible consultar la solicitud.")
     return payload
+
+
+@router.get("/solicitudes/{codigo}/formularios/{formulario}")
+def form_detail(
+    codigo: str,
+    formulario: str,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    code = _request_code(codigo)
+    form_code = _form_code(formulario)
+    _require_session(authorization, code)
+    try:
+        payload = _run_bridge("form", code, form_code)
+    except BridgeError as error:
+        raise _bridge_http(error) from error
+    if payload is None:
+        raise HTTPException(status_code=503, detail="No fue posible consultar el formulario.")
+    return payload
+
+
+@router.post("/solicitudes/{codigo}/formularios/{formulario}")
+def save_form(
+    codigo: str,
+    formulario: str,
+    data: FormSubmission,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    code = _request_code(codigo)
+    form_code = _form_code(formulario)
+    _require_session(authorization, code)
+    serialized = json.dumps(data.respuestas, ensure_ascii=False, separators=(",", ":"))
+    if len(serialized.encode("utf-8")) > 100_000:
+        raise HTTPException(status_code=413, detail="Las respuestas superan el tamaño permitido.")
+    try:
+        payload = _run_bridge("form_save", code, form_code, serialized)
+    except BridgeError as error:
+        if error.code == "FORM_INVALID":
+            raise HTTPException(status_code=400, detail="Revise los campos obligatorios del formulario.") from error
+        raise _bridge_http(error) from error
+    _audit(code, f"FORMULARIO_GUARDADO:{form_code}")
+    return payload or {"message": "Formulario guardado correctamente."}
