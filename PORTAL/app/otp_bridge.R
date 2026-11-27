@@ -53,7 +53,13 @@
     data <- .bridge_request(code, data_path)
     email <- tolower(trimws(as.character(data$tercero$CorreoContacto[[1L]])))
     name <- trimws(as.character(data$tercero$NombreContacto[[1L]]))
-    if (!nzchar(name)) name <- trimws(as.character(data$tercero$NombreRazonSocial[[1L]]))
+    if (is.na(email) || !grepl("^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$", email)) {
+      .bridge_fail("EMAIL_FAILED")
+    }
+    if (is.na(name) || !nzchar(name)) {
+      name <- trimws(as.character(data$tercero$NombreRazonSocial[[1L]]))
+    }
+    if (is.na(name)) name <- ""
     sent <- tryCatch({
       suppressMessages(racafeMail::racafeMailOTP(
         para = email, codigo = otp, nombre = name, minutos = minutes
