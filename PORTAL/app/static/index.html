@@ -133,9 +133,9 @@
         <div class="section-heading">
           <div>
             <p class="eyebrow">FORMULARIOS PARA DILIGENCIAR</p>
-            <h2 id="forms-title">Formularios y firmas</h2>
+            <h2 id="forms-title">Formularios requeridos</h2>
           </div>
-          <p>Cada formulario se diligencia y firma de manera independiente.</p>
+          <p>Diligencie cada formulario por separado. La firma se registrará una sola vez al finalizar.</p>
         </div>
 
         <div class="form-list">
@@ -146,19 +146,40 @@
                 <h3>Autorización de tratamiento de datos</h3>
                 <span class="badge">Pendiente</span>
               </div>
-              <p>Revise la autorización, confirme las finalidades y registre la firma en pantalla.</p>
+              <p>Revise la autorización, confirme las finalidades y guarde el formulario.</p>
             </div>
             <button id="open-authorization" class="button button-primary" type="button">
-              Diligenciar y firmar
+              Diligenciar formulario
             </button>
           </article>
+        </div>
+      </section>
+
+      <section class="signature-section" aria-labelledby="signature-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">FIRMA DE LA SOLICITUD</p>
+            <h2 id="signature-title">Firma del representante</h2>
+          </div>
+          <p>Esta firma se aplicará a todos los formularios diligenciados en la solicitud.</p>
+        </div>
+
+        <div class="card shared-signature-card">
+          <div class="signature-preview" aria-label="Área de firma">
+            <span>Firme dentro de este recuadro</span>
+            <small>La captura táctil se habilitará en la integración funcional.</small>
+          </div>
+          <label class="acceptance-check">
+            <input type="checkbox">
+            Declaro que revisé los formularios y que la información suministrada es correcta.
+          </label>
         </div>
       </section>
 
       <section class="card final-card">
         <div>
           <h2>Enviar documentación</h2>
-          <p>Revise que todos los requisitos estén completos antes de finalizar.</p>
+          <p>Revise que los documentos, formularios y la firma estén completos antes de finalizar.</p>
         </div>
         <button id="submit-request" class="button button-primary" type="button" disabled>
           Enviar para revisión
@@ -178,7 +199,7 @@
       </div>
 
       <p class="dialog-intro">
-        Revise la información y confirme las finalidades autorizadas antes de registrar la firma.
+        Revise la información y confirme las finalidades autorizadas antes de guardar el formulario.
       </p>
 
       <div class="authorization-summary">
@@ -193,19 +214,9 @@
         <label><input type="checkbox"> Recibir comunicaciones relacionadas con la relación comercial.</label>
       </fieldset>
 
-      <div class="signature-preview" aria-label="Área de firma">
-        <span>Área para firma en pantalla</span>
-        <small>La captura táctil se habilitará en la integración funcional.</small>
-      </div>
-
-      <label class="acceptance-check">
-        <input type="checkbox" checked>
-        Declaro que leí la autorización y que la información suministrada es correcta.
-      </label>
-
       <div class="dialog-actions">
         <button id="cancel-authorization" class="button button-secondary" type="button">Volver</button>
-        <button class="button button-primary" type="submit">Guardar autorización</button>
+        <button class="button button-primary" type="submit">Guardar formulario</button>
       </div>
     </form>
   </dialog>
