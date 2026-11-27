@@ -29,21 +29,13 @@ Verificación del entorno global:
 /usr/local/bin/python3.10 -c "import fastapi, uvicorn; print(fastapi.__version__, uvicorn.__version__)"
 ```
 
-El portal consume el CSS y los logos desde una copia local de `Compartido`. La ruta predeterminada del servicio es
-`/home/compartido/Compartido` y debe contener `python-web/` e `img/`. No se publica la raíz del repositorio: FastAPI
-expone únicamente `python-web/static/css/` e `img/` mediante `/shared/css` y `/shared/img`.
-
 Ejecución:
 
 ```bash
 cd /home/compartido/APP/4_ControlInterno/DocumentosTerceros/PORTAL
-RACAFE_SHARED_PATH="/home/compartido/Compartido" /usr/local/bin/python3.10 -m uvicorn app.main:app \
-  --host 127.0.0.1 --port 8019 --root-path /documentosterceros
+DOCUMENTOS_PORTAL_ROOT_PATH="/documentosterceros" /usr/local/bin/python3.10 -m uvicorn app.main:app \
+  --host 127.0.0.1 --port 8019
 ```
-
-La unidad productiva versionada está en `deploy/documentosterceros.service`. Si la copia local de `Compartido`
-está en otra ubicación, defina `RACAFE_SHARED_PATH` en `/etc/documentosterceros/documentosterceros.env`. Después
-de copiar la unidad a `/etc/systemd/system/`, ejecute `systemctl daemon-reload` y reinicie el servicio.
 
 ## Contrato API v1
 
