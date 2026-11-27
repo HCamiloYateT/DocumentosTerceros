@@ -88,7 +88,7 @@ FormulariosServer <- function(id, usuario, recarga) {
     }
 
     limpiar_campo <- function() {
-      updateNumericInput(session, "campo_orden", value = nrow(campos()) + 1L)
+      racafeUpdateNumeric(session, "campo_orden", value = nrow(campos()) + 1L)
       updateTextInput(session, "campo_codigo", value = "")
       updateTextAreaInput(session, "campo_etiqueta", value = "")
       racafeUpdateSelect(session, "campo_tipo", selected = "CASILLA")
