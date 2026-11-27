@@ -17,7 +17,7 @@ options(
 )
 .paquetes <- c(
   "shiny", "bs4Dash", "dplyr", "tibble", "stringr", "reactable", "openxlsx", "digest",
-  "htmltools", "qrcode", "base64enc", names(.versiones_componentes)
+  "htmltools", "qrcode", "base64enc", "jsonlite", names(.versiones_componentes)
 )
 .faltantes <- .paquetes[!vapply(.paquetes, requireNamespace, logical(1), quietly = TRUE)]
 if (length(.faltantes)) stop("Instale las dependencias: ", paste(.faltantes, collapse = ", "), call. = FALSE)
@@ -75,3 +75,4 @@ for (.carpeta in c("config", "datos", "modules", "ui")) {
 }
 rm(.carpeta, .carga)
 InicializarPersistenciaDocumentos()
+InicializarCatalogoFormularios()
