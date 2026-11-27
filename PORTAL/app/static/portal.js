@@ -11,6 +11,9 @@
   let requestData = null;
   let resendTimer = null;
   const selectedFiles = new Map();
+  const signatureStrokes = [];
+  let signatureContext = null;
+  let activeSignatureStroke = null;
 
   const setStatus = (id, message, state = '') => {
     const element = $(id);
@@ -121,6 +124,7 @@
     $('submit-request').disabled = !total || complete !== total;
     $('access-panel').hidden = true;
     $('request-panel').hidden = false;
+    window.requestAnimationFrame(resizeSignatureCanvas);
   };
 
   const loadRequest = async () => {
@@ -204,6 +208,108 @@
     }
   };
 
+  const drawSignatureStroke = (stroke, startIndex = 0) => {
+    if (!signatureContext || !stroke.length) return;
+    const canvas = $('signature-canvas');
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const first = stroke[startIndex];
+    signatureContext.beginPath();
+    signatureContext.moveTo(first.x * width, first.y * height);
+    if (stroke.length - startIndex === 1) {
+      signatureContext.lineTo(first.x * width + .01, first.y * height + .01);
+    } else {
+      stroke.slice(startIndex + 1).forEach(point => {
+        signatureContext.lineTo(point.x * width, point.y * height);
+      });
+    }
+    signatureContext.stroke();
+  };
+
+  const redrawSignature = () => {
+    if (!signatureContext) return;
+    const canvas = $('signature-canvas');
+    signatureContext.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    signatureStrokes.forEach(stroke => drawSignatureStroke(stroke));
+  };
+
+  const resizeSignatureCanvas = () => {
+    const canvas = $('signature-canvas');
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = Math.round(rect.width * ratio);
+    canvas.height = Math.round(rect.height * ratio);
+    signatureContext = canvas.getContext('2d');
+    signatureContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+    signatureContext.lineWidth = 2;
+    signatureContext.lineCap = 'round';
+    signatureContext.lineJoin = 'round';
+    signatureContext.strokeStyle = '#17202a';
+    redrawSignature();
+  };
+
+  const signaturePoint = event => {
+    const rect = $('signature-canvas').getBoundingClientRect();
+    return {
+      x: Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1),
+      y: Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1)
+    };
+  };
+
+  const beginSignature = event => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault();
+    const canvas = $('signature-canvas');
+    canvas.setPointerCapture(event.pointerId);
+    activeSignatureStroke = [signaturePoint(event)];
+    signatureStrokes.push(activeSignatureStroke);
+    drawSignatureStroke(activeSignatureStroke);
+    $('signature-placeholder').hidden = true;
+  };
+
+  const continueSignature = event => {
+    if (!activeSignatureStroke) return;
+    event.preventDefault();
+    activeSignatureStroke.push(signaturePoint(event));
+    drawSignatureStroke(activeSignatureStroke, Math.max(activeSignatureStroke.length - 2, 0));
+  };
+
+  const endSignature = event => {
+    if (!activeSignatureStroke) return;
+    event.preventDefault();
+    const canvas = $('signature-canvas');
+    if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+    activeSignatureStroke = null;
+    $('clear-signature').disabled = false;
+    $('signature-status').textContent = 'Firma registrada';
+    $('signature-status').dataset.state = 'complete';
+  };
+
+  const clearSignature = () => {
+    signatureStrokes.length = 0;
+    activeSignatureStroke = null;
+    redrawSignature();
+    $('signature-placeholder').hidden = false;
+    $('clear-signature').disabled = true;
+    $('signature-status').textContent = 'Firma pendiente';
+    delete $('signature-status').dataset.state;
+  };
+
+  const initializeSignature = () => {
+    const canvas = $('signature-canvas');
+    canvas.addEventListener('pointerdown', beginSignature);
+    canvas.addEventListener('pointermove', continueSignature);
+    canvas.addEventListener('pointerup', endSignature);
+    canvas.addEventListener('pointercancel', endSignature);
+    $('clear-signature').addEventListener('click', clearSignature);
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(resizeSignatureCanvas).observe(canvas);
+    } else {
+      window.addEventListener('resize', resizeSignatureCanvas);
+    }
+  };
+
   const openAuthorization = async () => {
     if (previewMode && typeof $('authorization-dialog').showModal === 'function') {
       $('authorization-dialog').showModal();
@@ -256,6 +362,7 @@
       $('authorization-dialog').close();
       setStatus('request-status', 'Vista previa: el formulario fue diligenciado, pero no se guardó.', 'success');
     });
+    initializeSignature();
 
     if (previewMode) {
       document.body.classList.add('preview-mode');
