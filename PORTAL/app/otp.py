@@ -296,6 +296,11 @@ def verify_otp(data: OtpVerification) -> dict[str, Any]:
                 message = "El código fue bloqueado. Solicite uno nuevo."
             raise HTTPException(status_code=400, detail=message)
 
+        try:
+            _run_bridge("request", code)
+        except BridgeError as error:
+            raise _bridge_http(error) from error
+
         state.pop("codigo_hash", None)
         state.pop("sal", None)
         state["verificado_en"] = now
