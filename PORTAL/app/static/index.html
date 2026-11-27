@@ -11,7 +11,7 @@
 <body>
   <header class="portal-header">
     <a class="brand" href="./" aria-label="Racafé, inicio">
-      <span class="brand-name">Racafé</span>
+      <img class="brand-logo" src="./static/logo-racafe.png" alt="Racafé">
       <span class="brand-area">Gestión documental de terceros</span>
     </a>
     <span class="secure-label">Acceso protegido</span>
@@ -79,17 +79,31 @@
 
       <div id="request-status" class="status-message" role="status" aria-live="polite"></div>
 
-      <div class="requirements-grid">
+      <section class="requirements-section" aria-labelledby="documents-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">DOCUMENTOS PARA ADJUNTAR</p>
+            <h2 id="documents-title">Archivos requeridos</h2>
+          </div>
+          <p>Cargue cada documento por separado en formato PDF.</p>
+        </div>
+
+        <div class="documents-grid">
         <article class="card requirement-card" data-requirement="DOC_RUT">
           <div class="card-topline"><span class="step-number">01</span><span class="badge">Pendiente</span></div>
           <h2>Registro Único Tributario</h2>
           <p>Adjunte el RUT completo, legible y vigente en formato PDF.</p>
-          <dl class="file-rules"><div><dt>Formato</dt><dd>PDF</dd></div><div><dt>Tamaño máximo</dt><dd>15 MB</dd></div></dl>
-          <label class="button button-secondary file-button">
-            Seleccionar RUT
+          <label class="file-dropzone" data-dropzone="DOC_RUT">
             <input type="file" accept="application/pdf,.pdf" data-file="DOC_RUT">
+            <span class="upload-icon" aria-hidden="true">↑</span>
+            <strong>Arrastre y suelte el archivo aquí</strong>
+            <span>o <span class="dropzone-action">seleccione un archivo</span></span>
+            <small>PDF · máximo 15 MB</small>
           </label>
-          <p class="file-name" data-file-name="DOC_RUT">Ningún archivo seleccionado</p>
+          <div class="file-selection">
+            <span class="file-name" data-file-name="DOC_RUT">Ningún archivo seleccionado</span>
+            <button type="button" class="file-clear" data-clear-file="DOC_RUT" hidden>Quitar</button>
+          </div>
           <button class="button button-primary" type="button" data-upload="DOC_RUT" disabled>Adjuntar documento</button>
         </article>
 
@@ -97,27 +111,49 @@
           <div class="card-topline"><span class="step-number">02</span><span class="badge">Pendiente</span></div>
           <h2>Certificado de existencia y representación legal</h2>
           <p>Adjunte el certificado completo, legible y vigente en formato PDF.</p>
-          <dl class="file-rules"><div><dt>Formato</dt><dd>PDF</dd></div><div><dt>Tamaño máximo</dt><dd>15 MB</dd></div></dl>
-          <label class="button button-secondary file-button">
-            Seleccionar certificado
+          <label class="file-dropzone" data-dropzone="DOC_CERL">
             <input type="file" accept="application/pdf,.pdf" data-file="DOC_CERL">
+            <span class="upload-icon" aria-hidden="true">↑</span>
+            <strong>Arrastre y suelte el archivo aquí</strong>
+            <span>o <span class="dropzone-action">seleccione un archivo</span></span>
+            <small>PDF · máximo 15 MB</small>
           </label>
-          <p class="file-name" data-file-name="DOC_CERL">Ningún archivo seleccionado</p>
+          <div class="file-selection">
+            <span class="file-name" data-file-name="DOC_CERL">Ningún archivo seleccionado</span>
+            <button type="button" class="file-clear" data-clear-file="DOC_CERL" hidden>Quitar</button>
+          </div>
           <button class="button button-primary" type="button" data-upload="DOC_CERL" disabled>
             Adjuntar documento
           </button>
         </article>
+        </div>
+      </section>
 
-        <article class="card requirement-card" data-requirement="FORM_HABEAS">
-          <div class="card-topline"><span class="step-number">03</span><span class="badge">Pendiente</span></div>
-          <h2>Autorización de tratamiento de datos</h2>
-          <p>Revise la autorización, responda las finalidades y registre su firma en pantalla.</p>
-          <dl class="file-rules"><div><dt>Modalidad</dt><dd>Formulario</dd></div><div><dt>Firma</dt><dd>Requerida</dd></div></dl>
-          <button id="open-authorization" class="button button-primary" type="button">
-            Diligenciar y firmar
-          </button>
-        </article>
-      </div>
+      <section class="forms-section" aria-labelledby="forms-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">FORMULARIOS PARA DILIGENCIAR</p>
+            <h2 id="forms-title">Formularios y firmas</h2>
+          </div>
+          <p>Cada formulario se diligencia y firma de manera independiente.</p>
+        </div>
+
+        <div class="form-list">
+          <article class="form-item" data-requirement="FORM_HABEAS">
+            <div class="form-icon" aria-hidden="true">03</div>
+            <div class="form-copy">
+              <div class="form-title-line">
+                <h3>Autorización de tratamiento de datos</h3>
+                <span class="badge">Pendiente</span>
+              </div>
+              <p>Revise la autorización, confirme las finalidades y registre la firma en pantalla.</p>
+            </div>
+            <button id="open-authorization" class="button button-primary" type="button">
+              Diligenciar y firmar
+            </button>
+          </article>
+        </div>
+      </section>
 
       <section class="card final-card">
         <div>
@@ -175,7 +211,7 @@
   </dialog>
 
   <footer class="portal-footer">
-    <span>Racafé &amp; Cía. S.C.A.</span>
+    <span class="footer-brand"><img src="./static/sello-racafe.png" alt="">Racafé &amp; Cía. S.C.A.</span>
     <span>La sesión se cerrará automáticamente al finalizar o por inactividad.</span>
   </footer>
 </body>
