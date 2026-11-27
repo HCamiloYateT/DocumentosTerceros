@@ -1,0 +1,31 @@
+[Unit]
+Description=Documentos Terceros Racafé - Portal público
+After=network.target
+
+[Service]
+Type=simple
+User=htamara
+Group=htamara
+
+WorkingDirectory=/home/compartido/APP/4_ControlInterno/DocumentosTerceros/PORTAL
+
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=TZ=America/Bogota
+Environment=DOCUMENTOS_DATA_PATH=/home/compartido/APP/4_ControlInterno/DocumentosTerceros/APP/data
+Environment=RACAFE_SHARED_PATH=/home/compartido/Compartido
+EnvironmentFile=-/etc/documentosterceros/documentosterceros.env
+
+ExecStart=/usr/local/bin/python3.10 -m uvicorn app.main:app --host 127.0.0.1 --port 8019 --root-path /documentosterceros --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-server-header
+
+Restart=on-failure
+RestartSec=3
+UMask=0077
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=false
+ReadWritePaths=/home/compartido/APP/4_ControlInterno/DocumentosTerceros/APP/data
+
+[Install]
+WantedBy=multi-user.target
