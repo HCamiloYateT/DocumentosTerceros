@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -7,6 +8,9 @@ from fastapi.staticfiles import StaticFiles
 
 APP_DIR = Path(__file__).resolve().parent
 STATIC_DIR = APP_DIR / "static"
+SHARED_DIR = Path(os.environ.get("RACAFE_SHARED_PATH", "/home/compartido/Compartido"))
+SHARED_CSS_DIR = SHARED_DIR / "python-web" / "static" / "css"
+SHARED_IMG_DIR = SHARED_DIR / "img"
 app = FastAPI(
     title="Portal de documentos de terceros",
     docs_url=None,
@@ -14,6 +18,8 @@ app = FastAPI(
     openapi_url=None,
 )
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/shared/css", StaticFiles(directory=SHARED_CSS_DIR), name="shared-css")
+app.mount("/shared/img", StaticFiles(directory=SHARED_IMG_DIR), name="shared-img")
 
 
 @app.middleware("http")
