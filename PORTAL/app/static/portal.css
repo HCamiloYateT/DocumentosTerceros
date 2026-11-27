@@ -60,6 +60,13 @@ p { margin: 0 0 16px; }
 .status-message[data-state="error"] { color: var(--danger); }
 .status-message[data-state="success"] { color: var(--success); }
 
+.preview-notice {
+  margin-bottom: 24px; padding: 14px 18px; border: 1px solid #f0c36b; border-radius: 10px;
+  display: flex; align-items: center; justify-content: space-between; gap: 18px; background: #fff8e8;
+  color: #69410a;
+}
+.preview-notice span { font-size: 13px; }
+
 .request-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; margin-bottom: 24px; }
 .request-heading h1 { font-size: clamp(30px, 4vw, 46px); }
 .request-meta { min-width: 330px; margin: 0; padding: 18px 20px; border: 1px solid var(--line); border-radius: var(--radius); display: grid; gap: 11px; background: var(--soft); }
@@ -92,6 +99,27 @@ p { margin: 0 0 16px; }
 
 .final-card { margin-top: 22px; padding: 22px; display: flex; align-items: center; justify-content: space-between; gap: 24px; box-shadow: none; }
 .final-card p { margin: 0; color: var(--muted); }
+.authorization-dialog {
+  width: min(720px, calc(100% - 32px)); max-height: calc(100vh - 32px); padding: 0;
+  border: 0; border-radius: var(--radius); box-shadow: 0 24px 80px rgba(23, 32, 42, .28);
+}
+.authorization-dialog::backdrop { background: rgba(23, 32, 42, .62); }
+.authorization-dialog form { padding: 28px; }
+.dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.dialog-heading h2 { max-width: 560px; font-size: 24px; }
+.dialog-close { width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--soft); font-size: 24px; line-height: 1; }
+.dialog-intro { margin: 16px 0 20px; color: var(--muted); }
+.authorization-summary { margin-bottom: 22px; padding: 16px; border-radius: 10px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; background: var(--soft); }
+.authorization-summary div { display: grid; gap: 3px; }
+.authorization-summary span { color: var(--muted); font-size: 12px; }
+.authorization-options { margin: 0; padding: 0; border: 0; display: grid; gap: 12px; }
+.authorization-options legend { margin-bottom: 12px; font-weight: 700; }
+.authorization-options label, .acceptance-check { display: flex; align-items: flex-start; gap: 10px; }
+.authorization-options input, .acceptance-check input { width: 17px; height: 17px; margin: 3px 0 0; accent-color: var(--racafe-red); }
+.signature-preview { min-height: 150px; margin: 22px 0; border: 1px dashed #98a2b3; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background: #fbfcfd; color: #344054; }
+.signature-preview small { color: var(--muted); text-align: center; }
+.acceptance-check { padding-top: 18px; border-top: 1px solid var(--line); }
+.dialog-actions { margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px; }
 .portal-footer { padding: 22px clamp(20px, 5vw, 72px); border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font-size: 12px; }
 
 @media (max-width: 900px) {
@@ -106,6 +134,10 @@ p { margin: 0 0 16px; }
   .brand-area { display: none; }
   .portal-shell { width: min(100% - 24px, 1180px); padding-top: 30px; }
   .access-card { padding: 22px; }
+  .preview-notice, .authorization-summary { align-items: flex-start; grid-template-columns: 1fr; flex-direction: column; }
   .request-meta div, .progress-copy, .final-card, .portal-footer { align-items: flex-start; flex-direction: column; }
+  .authorization-dialog form { padding: 22px; }
+  .dialog-actions { flex-direction: column-reverse; }
+  .dialog-actions .button { width: 100%; }
   .final-card .button { width: 100%; }
 }
