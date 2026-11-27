@@ -113,7 +113,7 @@
   )
   .bridge_validate_answers(form, answers)
 
-  lock <- file.path(data_path, "bloqueos", "portal_formularios.lock")
+  lock <- file.path(data_path, "bloqueos", "persistencia.lock")
   started <- Sys.time()
   repeat {
     if (dir.create(lock, showWarnings = FALSE, recursive = FALSE)) break
