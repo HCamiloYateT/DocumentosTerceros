@@ -215,6 +215,8 @@
     req <- lapply(seq_len(nrow(data$requisitos)), function(i) {
       list(
         codigo = as.character(data$requisitos$CodigoRequisito[[i]]),
+        tipo = as.character(data$requisitos$TipoRequisito[[i]]),
+        nombre = as.character(data$requisitos$NombreRequisito[[i]]),
         estado = as.character(data$requisitos$Estado[[i]])
       )
     })
