@@ -1,10 +1,8 @@
-# Módulo de administración de formularios ----
+# Módulo de administración de formularios PDF ----
 .formularios_opciones <- function() {
   catalogo <- ListarCatalogoFormularios()
   stats::setNames(names(catalogo), vapply(catalogo, `[[`, character(1), "nombre"))
 }
-
-.formularios_campos_vacios <- function() .FOR_HABEAS_PREDETERMINADO$campos[0, , drop = FALSE]
 
 .formularios_contenido_ui <- function(ns) {
   tagList(
@@ -13,10 +11,10 @@
       column(
         width = 5,
         racafePanel(
-          "Definición del formulario",
+          "Plantilla PDF",
           racafeForm(
-            id = "formulario_catalogo", ns = ns, variant = "plain",
-            racafeInputSelect("formulario", "Formulario guardado", choices = .formularios_opciones(),
+            id = "formulario_pdf", ns = ns, variant = "plain",
+            racafeInputSelect("formulario", "Formulario", choices = .formularios_opciones(),
                               selected = "FORM_HABEAS", empty = FALSE, ns = ns),
             racafeActionBar(
               left = racafeButton("cargar_formulario", "Cargar", icon = "folder-open",
@@ -24,44 +22,41 @@
               right = racafeButton("nuevo_formulario", "Nuevo", icon = "plus",
                                    variant = "secondary", ns = ns)
             ),
-            racafeInputText("codigo", "Código", value = "FORM_HABEAS", required = TRUE, ns = ns),
-            racafeInputText("nombre", "Nombre", required = TRUE, ns = ns),
-            racafeInputTextArea("descripcion", "Texto introductorio", rows = 6, required = TRUE, ns = ns),
+            racafeFormRow(
+              columns = 2, responsive = "auto",
+              racafeInputText("codigo", "Código interno", value = "FORM_HABEAS", required = TRUE, ns = ns),
+              racafeInputText("codigo_documento", "Código documental", value = "FT-GN-05",
+                              required = TRUE, ns = ns)
+            ),
+            racafeInputText("nombre", "Nombre del formato", required = TRUE, ns = ns),
+            racafeFormRow(
+              columns = 2, responsive = "auto",
+              racafeInputNumeric("version", "Versión", value = 7, min = 1, format = "integer", ns = ns),
+              racafeInputText("fecha_formato", "Fecha del formato", value = "2025-01-28",
+                              help = "Formato AAAA-MM-DD.", required = TRUE, ns = ns)
+            ),
+            racafeInputFile("archivo_pdf", "PDF del formato", accept = ".pdf",
+                            max_size = .FOR_MAX_PDF, ns = ns),
             racafeInputSwitch("activo", "Disponible para diligenciamiento", value = TRUE, ns = ns),
-            racafeFormFooter(
-              racafeButtonSave("guardar_formulario", "Guardar formulario", ns = ns)
-            )
+            racafeActionBar(
+              left = racafeButtonDownload("descargar_pdf", "Descargar PDF vigente",
+                                          icon = "file-pdf", ns = ns),
+              right = NULL
+            ),
+            racafeFormFooter(racafeButtonSave("guardar_formulario", "Guardar versión", ns = ns))
           )
         )
       ),
       column(
         width = 7,
         racafePanel(
-          "Campos para diligenciar",
-          racafeFormRow(
-            columns = 3, responsive = "auto",
-            racafeInputNumeric("campo_orden", "Orden", value = 1, min = 1, format = "integer", ns = ns),
-            racafeInputText("campo_codigo", "Código del campo", required = TRUE, ns = ns),
-            racafeInputSelect("campo_tipo", "Tipo", choices = .FOR_TIPOS_CAMPO,
-                              selected = "CASILLA", empty = FALSE, ns = ns)
-          ),
-          racafeInputTextArea("campo_etiqueta", "Etiqueta o pregunta", rows = 2, required = TRUE, ns = ns),
-          racafeFormRow(
-            columns = 2, responsive = "auto",
-            racafeInputText("campo_opciones", "Opciones", help = "Separadas por | para campos de selección.", ns = ns),
-            racafeInputText("campo_ayuda", "Ayuda", ns = ns)
-          ),
-          racafeInputSwitch("campo_obligatorio", "Campo obligatorio", value = TRUE, ns = ns),
+          "Campos del PDF",
+          p("El FT-GN-05 utiliza diez respuestas SI/NO y completa automáticamente nombre, identificación y fecha."),
+          racafeInputFile("archivo_mapeo", "Modificar mapeo desde Excel", accept = ".xlsx",
+                          max_size = 5 * 1024^2, ns = ns),
           racafeActionBar(
-            left = racafeButton("guardar_campo", "Agregar o actualizar", icon = "plus",
-                                variant = "secondary", ns = ns),
-            right = racafeButtonDelete("eliminar_campo", "Eliminar campo", ns = ns)
-          ),
-          racafeInputFile("archivo_campos", "Cargar definición desde Excel", accept = ".xlsx",
-                          max_size = .FOR_MAX_ARCHIVO, ns = ns),
-          racafeActionBar(
-            left = racafeButtonDownload("plantilla_campos", "Descargar plantilla", icon = "file-excel", ns = ns),
-            right = racafeButton("cargar_campos", "Reemplazar campos", icon = "upload",
+            left = racafeButtonDownload("plantilla_mapeo", "Descargar mapeo", icon = "file-excel", ns = ns),
+            right = racafeButton("aplicar_mapeo", "Aplicar mapeo", icon = "upload",
                                  variant = "secondary", ns = ns)
           ),
           TablaVancouverUI(ns("tabla_campos"), descargable = TRUE)
@@ -78,10 +73,10 @@ FormulariosUI <- function(id) {
 
 FormulariosServer <- function(id, usuario, grupo, recarga) {
   moduleServer(id, function(input, output, session) {
-    campos <- reactiveVal(.formularios_campos_vacios())
-    pendiente_guardar <- reactiveVal(NULL)
-
+    finalidades <- reactiveVal(.FOR_FINALIDADES_FT_GN_05)
+    pendiente <- reactiveVal(NULL)
     autorizado <- reactive(any(grupo() %in% c("ANALÍTICA", "ANALITICA")))
+
     output$contenido <- renderUI({
       if (!autorizado()) {
         return(racafePanel(
@@ -95,139 +90,101 @@ FormulariosServer <- function(id, usuario, grupo, recarga) {
     cargar_formulario <- function(codigo) {
       formulario <- ObtenerFormularioCatalogo(codigo)
       updateTextInput(session, "codigo", value = formulario$codigo)
+      updateTextInput(session, "codigo_documento", value = formulario$codigo_documento)
       updateTextInput(session, "nombre", value = formulario$nombre)
-      updateTextAreaInput(session, "descripcion", value = formulario$descripcion)
+      racafeUpdateNumeric(session, "version", value = formulario$version)
+      updateTextInput(session, "fecha_formato", value = format(as.Date(formulario$fecha_formato), "%Y-%m-%d"))
       racafeUpdateSwitch(session, "activo", formulario$activo)
-      campos(formulario$campos)
+      finalidades(formulario$finalidades)
       invisible(formulario)
     }
 
-    limpiar_campo <- function() {
-      racafeUpdateNumeric(session, "campo_orden", value = nrow(campos()) + 1L)
-      updateTextInput(session, "campo_codigo", value = "")
-      updateTextAreaInput(session, "campo_etiqueta", value = "")
-      racafeUpdateSelect(session, "campo_tipo", selected = "CASILLA")
-      updateTextInput(session, "campo_opciones", value = "")
-      updateTextInput(session, "campo_ayuda", value = "")
-      racafeUpdateSwitch(session, "campo_obligatorio", TRUE)
-    }
-
     observeEvent(input$cargar_formulario, {
-      tryCatch({
-        cargar_formulario(input$formulario)
-      }, error = function(e) {
+      tryCatch(cargar_formulario(input$formulario), error = function(e) {
         racafeNotify(session, "No fue posible cargar el formulario", conditionMessage(e), type = "error")
       })
     })
 
     observeEvent(input$nuevo_formulario, {
       updateTextInput(session, "codigo", value = "FORM_")
+      updateTextInput(session, "codigo_documento", value = "")
       updateTextInput(session, "nombre", value = "")
-      updateTextAreaInput(session, "descripcion", value = "")
+      racafeUpdateNumeric(session, "version", value = 1)
+      updateTextInput(session, "fecha_formato", value = format(Sys.Date(), "%Y-%m-%d"))
       racafeUpdateSwitch(session, "activo", TRUE)
-      campos(.formularios_campos_vacios())
-      limpiar_campo()
+      finalidades(.FOR_FINALIDADES_FT_GN_05)
     })
 
-    observeEvent(input$guardar_campo, {
-      fila <- tibble::tibble(
-        Orden = suppressWarnings(as.integer(input$campo_orden)),
-        CodigoCampo = toupper(trimws(input$campo_codigo %||% "")),
-        Etiqueta = trimws(input$campo_etiqueta %||% ""),
-        Tipo = input$campo_tipo %||% "",
-        Obligatorio = isTRUE(input$campo_obligatorio),
-        Opciones = trimws(input$campo_opciones %||% ""),
-        Ayuda = trimws(input$campo_ayuda %||% "")
-      )
+    observeEvent(input$aplicar_mapeo, {
       tryCatch({
-        actual <- campos()
-        actual <- actual[actual$CodigoCampo != fila$CodigoCampo, , drop = FALSE]
-        campos(.for_normalizar_campos(dplyr::bind_rows(actual, fila)))
-        limpiar_campo()
+        finalidades(LeerMapeoFormularioExcel(input$archivo_mapeo))
+        racafeNotify(session, "Mapeo aplicado", "Revise los campos antes de guardar la versión.", type = "success")
       }, error = function(e) {
-        racafeNotify(session, "Campo no válido", conditionMessage(e), type = "error")
+        racafeNotify(session, "No fue posible aplicar el mapeo", conditionMessage(e), type = "error")
       })
     })
 
-    observeEvent(input$eliminar_campo, {
-      codigo <- toupper(trimws(input$campo_codigo %||% ""))
-      if (!nzchar(codigo)) {
-        racafeNotify(session, "Indique el campo", "Escriba el código del campo que desea eliminar.", type = "warning")
-        return(invisible(NULL))
-      }
-      actual <- campos()
-      campos(actual[actual$CodigoCampo != codigo, , drop = FALSE])
-      limpiar_campo()
-    })
-
-    observeEvent(input$cargar_campos, {
-      tryCatch({
-        campos(LeerCamposFormularioExcel(input$archivo_campos))
-        racafeNotify(session, "Campos cargados", "La definición del Excel reemplazó la edición actual.",
-                     type = "success")
-      }, error = function(e) {
-        racafeNotify(session, "No fue posible cargar los campos", conditionMessage(e), type = "error")
-      })
-    })
-
-    output$plantilla_campos <- downloadHandler(
-      filename = function() "plantilla_campos_formulario.xlsx",
+    output$plantilla_mapeo <- downloadHandler(
+      filename = function() "mapeo_campos_FT-GN-05.xlsx",
       content = function(file) {
-        openxlsx::write.xlsx(.FOR_HABEAS_PREDETERMINADO$campos, file, overwrite = TRUE)
+        datos <- dplyr::select(finalidades(), dplyr::all_of(.FOR_COLUMNAS_MAPEO))
+        openxlsx::write.xlsx(datos, file, overwrite = TRUE)
       }
     )
 
+    output$descargar_pdf <- downloadHandler(
+      filename = function() {
+        formulario <- ObtenerFormularioCatalogo(input$formulario %||% "FORM_HABEAS")
+        paste0(formulario$codigo_documento, "_v", formulario$version, ".pdf")
+      },
+      content = function(file) {
+        formulario <- ObtenerFormularioCatalogo(input$formulario %||% "FORM_HABEAS")
+        origen <- .for_ruta_absoluta(formulario$archivo)
+        if (!file.exists(origen) || !file.copy(origen, file, overwrite = TRUE)) {
+          stop("El PDF vigente no está disponible.", call. = FALSE)
+        }
+      },
+      contentType = "application/pdf"
+    )
+
     TablaVancouver(
-      "tabla_campos", data = reactive(campos()), page_size = 8,
-      nombre_archivo = "campos_formulario",
-      col_labels = c(CodigoCampo = "Código", Obligatorio = "Obligatorio"),
-      footer = reactive(paste(nrow(campos()), "campos configurados"))
+      "tabla_campos", data = reactive(finalidades()), page_size = 10,
+      nombre_archivo = "mapeo_formulario_pdf",
+      col_labels = c(Numero = "N.º", CodigoCampo = "Respuesta", CampoSi = "Campo SI", CampoNo = "Campo NO"),
+      footer = reactive(paste(nrow(finalidades()), "finalidades configuradas"))
     )
 
     observeEvent(input$guardar_formulario, {
       formulario <- list(
-        codigo = input$codigo,
-        nombre = input$nombre,
-        descripcion = input$descripcion,
-        activo = isTRUE(input$activo),
-        campos = campos()
+        codigo = input$codigo %||% "", codigo_documento = input$codigo_documento %||% "",
+        nombre = input$nombre %||% "", version = input$version,
+        fecha_formato = input$fecha_formato %||% "", activo = isTRUE(input$activo),
+        finalidades = finalidades()
       )
-      cond <- c(
-        "El código es obligatorio" = !nzchar(trimws(formulario$codigo %||% "")),
-        "El nombre es obligatorio" = !nzchar(trimws(formulario$nombre %||% "")),
-        "La descripción es obligatoria" = !nzchar(trimws(formulario$descripcion %||% "")),
-        "Agregue al menos un campo" = !nrow(formulario$campos)
+      pendiente(formulario)
+      racafeConfirm(
+        session, "confirmar_guardado", "Guardar plantilla PDF",
+        "Se conservará la versión anterior y el portal utilizará la versión indicada.",
+        confirm_label = "Guardar", ns = session$ns
       )
-      if (any(cond)) {
-        sapply(names(cond)[cond], function(x) racafeNotify(session, x, type = "error"))
-        return(invisible(NULL))
-      }
-      pendiente_guardar(formulario)
-      racafeConfirm(session, "confirmar_guardado", "Guardar formulario",
-                    "La nueva versión quedará disponible para las solicitudes que lo requieran.",
-                    confirm_label = "Guardar", ns = session$ns)
     })
 
     observeEvent(input$confirmar_guardado, {
-      if (!autorizado()) {
-        racafeNotify(session, "Acceso restringido", "No tiene permisos para administrar formularios.", type = "error")
-        return(invisible(NULL))
-      }
-      if (!isTRUE(input$confirmar_guardado) || is.null(pendiente_guardar())) return(invisible(NULL))
+      if (!autorizado() || !isTRUE(input$confirmar_guardado) || is.null(pendiente())) return(invisible(NULL))
       tryCatch({
-        formulario <- GuardarFormularioCatalogo(pendiente_guardar(), usuario())
-        pendiente_guardar(NULL)
-        opciones <- .formularios_opciones()
-        racafeUpdateSelect(session, "formulario", choices = opciones, selected = formulario$codigo)
+        formulario <- GuardarFormularioCatalogo(pendiente(), input$archivo_pdf, usuario())
+        pendiente(NULL)
+        racafeUpdateSelect(session, "formulario", choices = .formularios_opciones(),
+                           selected = formulario$codigo)
         cargar_formulario(formulario$codigo)
         recarga(recarga() + 1L)
         racafeNotify(
-          session, "Formulario guardado",
-          paste("Se registró la versión", formulario$version, "y se actualizó el portal."),
+          session, "Plantilla publicada",
+          paste(formulario$codigo_documento, "versión", formulario$version, "está disponible en el portal."),
           type = "success"
         )
       }, error = function(e) {
-        racafeNotify(session, "No fue posible guardar el formulario", conditionMessage(e), type = "error")
+        racafeNotify(session, "No fue posible guardar la plantilla", conditionMessage(e), type = "error")
       })
     }, ignoreInit = TRUE)
 

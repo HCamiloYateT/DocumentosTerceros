@@ -1,31 +1,62 @@
 # Constantes del módulo Formularios ----
-.FOR_TIPOS_CAMPO <- c("Texto" = "TEXTO", "Texto largo" = "TEXTO_LARGO",
-                       "Selección" = "SELECCION", "Casilla" = "CASILLA")
-.FOR_COLUMNAS_EXCEL <- c("Orden", "CodigoCampo", "Etiqueta", "Tipo", "Obligatorio", "Opciones", "Ayuda")
-.FOR_MAX_ARCHIVO <- 5 * 1024^2
+.FOR_MAX_PDF <- 16 * 1024^2
+.FOR_COLUMNAS_MAPEO <- c("Numero", "Etiqueta", "CampoSi", "CampoNo")
 
-.FOR_HABEAS_PREDETERMINADO <- list(
+.FOR_FINALIDADES_FT_GN_05 <- tibble::tribble(
+  ~Numero, ~CodigoCampo, ~Etiqueta, ~CampoSi, ~CampoNo,
+  1L, "FINALIDAD_01",
+  paste("Efectuar las gestiones pertinentes para el cumplimiento del objeto del contrato celebrado con el",
+        "Titular de la información y gestionar trámites de PQR."),
+  "Casilla de verificación1", "Casilla de verificación2",
+  2L, "FINALIDAD_02",
+  "Verificación y reporte en centrales de riesgo y uso estadístico, tributario, contable, financiero y legal.",
+  "Casilla de verificación3", "Casilla de verificación4",
+  3L, "FINALIDAD_03",
+  paste("Publicar su imagen en videos o publicaciones físicas o digitales de Racafé, así como en sitios web,",
+        "redes sociales o publicaciones corporativas."),
+  "Casilla de verificación5", "Casilla de verificación8",
+  4L, "FINALIDAD_04",
+  paste("Personalizar y mejorar productos y servicios, y extender ofertas de comercialización por medios",
+        "electrónicos, página de internet, WhatsApp y redes sociales."),
+  "Casilla de verificación6", "Casilla de verificación7",
+  5L, "FINALIDAD_05",
+  paste("Personalizar y mejorar productos y servicios, y extender ofertas de comercialización mediante",
+        "llamadas telefónicas, correo electrónico y mensajes de texto."),
+  "Casilla de verificación9", "Casilla de verificación10",
+  6L, "FINALIDAD_06",
+  paste("Efectuar encuestas de satisfacción y extender ofertas de comercialización de productos y servicios",
+        "directamente o mediante empresas de mercadeo relacional."),
+  "Casilla de verificación11", "Casilla de verificación12",
+  7L, "FINALIDAD_07",
+  paste("Transferir o transmitir datos personales para fines estadísticos, comerciales, informativos, de",
+        "seguimiento, mercadeo, notificación y contacto por los canales autorizados."),
+  "Casilla de verificación13", "Casilla de verificación18",
+  8L, "FINALIDAD_08",
+  paste("Transmitir o transferir datos personales e información de la actividad desarrollada a clientes o",
+        "aliados estratégicos para cumplir estándares voluntarios de sostenibilidad e internacionales."),
+  "Casilla de verificación14", "Casilla de verificación15",
+  9L, "FINALIDAD_09",
+  paste("Transmitir o transferir a entidades financieras y aliados estratégicos los datos personales y la",
+        "información comercial y financiera registrada para el ofrecimiento de productos y servicios."),
+  "Casilla de verificación16", "Casilla de verificación17",
+  10L, "FINALIDAD_10",
+  paste("Grabar las llamadas telefónicas de la relación comercial para control de calidad, análisis de datos,",
+        "conocimiento del contexto e identificación de necesidades."),
+  "Casilla de verificación19", "Casilla de verificación20"
+)
+
+.FOR_FT_GN_05_PREDETERMINADO <- list(
   codigo = "FORM_HABEAS",
-  nombre = "Autorización para el tratamiento de datos personales",
-  descripcion = paste(
-    "Autorizo de manera previa, expresa e informada a Racafé & Cía. S.C.A. para recolectar, almacenar,",
-    "usar, circular, actualizar y suprimir mis datos personales conforme a su política de tratamiento",
-    "de información y a las finalidades indicadas a continuación."
-  ),
-  version = 1L,
+  codigo_documento = "FT-GN-05",
+  nombre = "Autorización tratamiento de datos personales proveedores – clientes",
+  descripcion = "Seleccione SI o NO para cada finalidad indicada en el formato oficial.",
+  tipo = "PDF_ACROFORM",
+  version = 7L,
+  fecha_formato = as.Date("2025-01-28"),
   activo = TRUE,
+  archivo = file.path("catalogos", "formularios", "FORM_HABEAS", "v007", "plantilla.pdf"),
   actualizado_en = as.POSIXct(Sys.time(), tz = "UTC"),
   actualizado_por = "SISTEMA",
-  campos = tibble::tribble(
-    ~Orden, ~CodigoCampo, ~Etiqueta, ~Tipo, ~Obligatorio, ~Opciones, ~Ayuda,
-    1L, "AUTORIZA_CREACION",
-    "Autoriza el tratamiento de la información suministrada para la creación o actualización del tercero.",
-    "CASILLA", TRUE, "", "",
-    2L, "AUTORIZA_VALIDACION",
-    "Autoriza la consulta de fuentes públicas, listas de control y demás validaciones aplicables.",
-    "CASILLA", TRUE, "", "",
-    3L, "AUTORIZA_COMUNICACIONES",
-    "Autoriza recibir comunicaciones relacionadas con la relación comercial.",
-    "CASILLA", FALSE, "", "Esta autorización es opcional."
-  )
+  campos_texto = c(nombre = "Texto1", identificacion = "Texto2", fecha = "Texto3"),
+  finalidades = .FOR_FINALIDADES_FT_GN_05
 )

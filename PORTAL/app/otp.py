@@ -13,7 +13,10 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Header, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
+
+from .pdf_forms import fill_pdf, resolve_template
 
 
 REQUEST_PATTERN = re.compile(r"^SOL-[0-9]{4}-[0-9]{6}$")
@@ -355,6 +358,27 @@ def form_detail(
     return payload
 
 
+@router.get("/solicitudes/{codigo}/formularios/{formulario}/plantilla")
+def form_template(
+    codigo: str,
+    formulario: str,
+    authorization: str | None = Header(default=None),
+) -> FileResponse:
+    code = _request_code(codigo)
+    form_code = _form_code(formulario)
+    _require_session(authorization, code)
+    try:
+        payload = _run_bridge("form", code, form_code)
+        if payload is None:
+            raise BridgeError("FORM_NOT_AVAILABLE")
+        path = resolve_template(DATA_PATH, str(payload["formulario"]["archivo"]))
+    except (BridgeError, FileNotFoundError, KeyError, ValueError) as error:
+        if isinstance(error, BridgeError):
+            raise _bridge_http(error) from error
+        raise HTTPException(status_code=404, detail="El PDF del formulario no está disponible.") from error
+    return FileResponse(path, media_type="application/pdf", filename=path.name)
+
+
 @router.post("/solicitudes/{codigo}/formularios/{formulario}")
 def save_form(
     codigo: str,
@@ -368,11 +392,23 @@ def save_form(
     serialized = json.dumps(data.respuestas, ensure_ascii=False, separators=(",", ":"))
     if len(serialized.encode("utf-8")) > 100_000:
         raise HTTPException(status_code=413, detail="Las respuestas superan el tamaño permitido.")
+    output = DATA_PATH / "solicitudes" / code / "formularios" / form_code / "formulario.pdf"
     try:
+        detail = _run_bridge("form", code, form_code)
+        request = _run_bridge("request", code)
+        if detail is None or request is None:
+            raise BridgeError("FORM_NOT_AVAILABLE")
+        template = resolve_template(DATA_PATH, str(detail["formulario"]["archivo"]))
+        fill_pdf(template, output, detail["formulario"], data.respuestas, request["tercero"])
         payload = _run_bridge("form_save", code, form_code, serialized)
     except BridgeError as error:
+        output.unlink(missing_ok=True)
         if error.code == "FORM_INVALID":
             raise HTTPException(status_code=400, detail="Revise los campos obligatorios del formulario.") from error
         raise _bridge_http(error) from error
+    except (FileNotFoundError, KeyError, ValueError, OSError) as error:
+        output.unlink(missing_ok=True)
+        raise HTTPException(status_code=503, detail="No fue posible generar el PDF diligenciado.") from error
     _audit(code, f"FORMULARIO_GUARDADO:{form_code}")
     return payload or {"message": "Formulario guardado correctamente."}
+

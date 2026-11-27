@@ -196,16 +196,33 @@
         <button id="close-authorization" class="dialog-close" type="button" aria-label="Cerrar">×</button>
       </div>
 
-      <p id="authorization-description" class="dialog-intro">
-        Revise la información y confirme las finalidades autorizadas antes de guardar el formulario.
-      </p>
-
-      <div class="authorization-summary">
-        <div><span>Nombre o razón social</span><strong id="authorization-name">—</strong></div>
-        <div><span>Identificación</span><strong id="authorization-identification">—</strong></div>
+      <div class="form-document-meta">
+        <span id="authorization-document-code">FT-GN-05</span>
+        <span id="authorization-version">Versión 7</span>
+        <button id="open-form-pdf" class="button button-secondary" type="button">Ver PDF original</button>
       </div>
 
-      <div id="authorization-fields" class="authorization-options"></div>
+      <div class="authorization-layout">
+        <section class="pdf-preview" aria-label="Vista del formato oficial">
+          <iframe id="authorization-pdf" title="Formato oficial FT-GN-05" hidden></iframe>
+          <div id="authorization-pdf-placeholder" class="pdf-placeholder">
+            El formato oficial se mostrará al consultar una solicitud activa.
+          </div>
+        </section>
+
+        <section class="authorization-response">
+          <p id="authorization-description" class="dialog-intro">
+            Seleccione SI o NO para cada finalidad indicada en el formato oficial.
+          </p>
+          <div class="authorization-summary">
+            <div><span>Nombre o razón social</span><strong id="authorization-name">—</strong></div>
+            <div><span>Identificación</span><strong id="authorization-identification">—</strong></div>
+          </div>
+          <fieldset id="authorization-fields" class="authorization-options">
+            <legend>Finalidades del tratamiento</legend>
+          </fieldset>
+        </section>
+      </div>
 
       <div class="dialog-actions">
         <button id="cancel-authorization" class="button button-secondary" type="button">Volver</button>
@@ -220,3 +237,4 @@
   </footer>
 </body>
 </html>
+
