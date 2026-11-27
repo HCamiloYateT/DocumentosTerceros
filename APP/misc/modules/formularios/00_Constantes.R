@@ -18,13 +18,13 @@
   actualizado_por = "SISTEMA",
   campos = tibble::tribble(
     ~Orden, ~CodigoCampo, ~Etiqueta, ~Tipo, ~Obligatorio, ~Opciones, ~Ayuda,
-    1L, "autoriza_creacion",
+    1L, "AUTORIZA_CREACION",
     "Autoriza el tratamiento de la información suministrada para la creación o actualización del tercero.",
     "CASILLA", TRUE, "", "",
-    2L, "autoriza_validacion",
+    2L, "AUTORIZA_VALIDACION",
     "Autoriza la consulta de fuentes públicas, listas de control y demás validaciones aplicables.",
     "CASILLA", TRUE, "", "",
-    3L, "autoriza_comunicaciones",
+    3L, "AUTORIZA_COMUNICACIONES",
     "Autoriza recibir comunicaciones relacionadas con la relación comercial.",
     "CASILLA", FALSE, "", "Esta autorización es opcional."
   )
