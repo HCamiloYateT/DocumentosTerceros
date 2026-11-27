@@ -4,6 +4,7 @@ sidebar <- bs4Dash::bs4DashSidebar(
     id = "menu_principal",
     bs4Dash::bs4SidebarMenuItem("Inicio", tabName = "IN_Inicio", icon = icon("house"), selected = TRUE),
     bs4Dash::bs4SidebarMenuItem("Solicitudes", tabName = "SO_Solicitudes", icon = icon("folder-plus")),
+    bs4Dash::bs4SidebarMenuItem("Formularios", tabName = "FO_Formularios", icon = icon("file-pen")),
     bs4Dash::bs4SidebarMenuItem("Validación documental", tabName = "VA_Documentos",
                                 icon = icon("file-circle-check")),
     bs4Dash::bs4SidebarMenuItem("Expedientes", tabName = "EX_Expedientes", icon = icon("folder-tree"))
