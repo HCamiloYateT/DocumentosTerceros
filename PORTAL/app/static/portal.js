@@ -6,6 +6,7 @@
   const $ = id => document.getElementById(id);
   const params = new URLSearchParams(window.location.search);
   const requestCode = (params.get('solicitud') || '').trim().toUpperCase();
+  const previewMode = params.get('vista') === 'previa';
   let sessionToken = sessionStorage.getItem(`documentos:${requestCode}`) || '';
   let requestData = null;
   let resendTimer = null;
@@ -165,6 +166,10 @@
     const input = document.querySelector(`[data-file="${code}"]`);
     const file = input.files[0];
     if (!file) return;
+    if (previewMode) {
+      setStatus('request-status', 'Vista previa: el archivo seleccionado no fue enviado ni almacenado.', 'success');
+      return;
+    }
     button.disabled = true;
     setStatus('request-status', `Adjuntando ${file.name}…`);
     const body = new FormData();
@@ -182,10 +187,18 @@
   };
 
   const openAuthorization = async () => {
+    if (previewMode && typeof $('authorization-dialog').showModal === 'function') {
+      $('authorization-dialog').showModal();
+      return;
+    }
     setStatus('request-status', 'La autorización se habilitará al integrar el formulario firmado.', 'error');
   };
 
   const submitRequest = async () => {
+    if (previewMode) {
+      setStatus('request-status', 'Vista previa: la solicitud no fue enviada.', 'success');
+      return;
+    }
     $('submit-request').disabled = true;
     setStatus('request-status', 'Enviando documentación para revisión…');
     try {
@@ -199,12 +212,6 @@
   };
 
   const initialize = () => {
-    if (!REQUEST_PATTERN.test(requestCode)) {
-      $('request-otp').disabled = true;
-      setStatus('access-status', 'El enlace no contiene una solicitud válida.', 'error');
-      return;
-    }
-    $('request-reference').textContent = `Solicitud ${requestCode}`;
     $('request-otp').addEventListener('click', requestOtp);
     $('resend-otp').addEventListener('click', requestOtp);
     $('otp-form').addEventListener('submit', verifyOtp);
@@ -212,6 +219,40 @@
     document.querySelectorAll('[data-upload]').forEach(button => button.addEventListener('click', uploadFile));
     $('open-authorization').addEventListener('click', openAuthorization);
     $('submit-request').addEventListener('click', submitRequest);
+    $('close-authorization').addEventListener('click', () => $('authorization-dialog').close());
+    $('cancel-authorization').addEventListener('click', () => $('authorization-dialog').close());
+    $('authorization-form').addEventListener('submit', event => {
+      event.preventDefault();
+      $('authorization-dialog').close();
+      setStatus('request-status', 'Vista previa: la autorización no fue guardada.', 'success');
+    });
+
+    if (previewMode) {
+      document.body.classList.add('preview-mode');
+      $('preview-notice').hidden = false;
+      renderRequest({
+        codigo_solicitud: 'SOL-2026-000000',
+        vence_en: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        tercero: {
+          nombre_razon_social: 'Empresa de ejemplo S.A.S.',
+          tipo_identificacion: 'NIT',
+          numero_identificacion: '900123456'
+        },
+        requisitos: [
+          {codigo: 'DOC_RUT', estado: 'COMPLETADO'},
+          {codigo: 'DOC_CERL', estado: 'PENDIENTE'},
+          {codigo: 'FORM_HABEAS', estado: 'PENDIENTE'}
+        ]
+      });
+      return;
+    }
+
+    if (!REQUEST_PATTERN.test(requestCode)) {
+      $('request-otp').disabled = true;
+      setStatus('access-status', 'El enlace no contiene una solicitud válida.', 'error');
+      return;
+    }
+    $('request-reference').textContent = `Solicitud ${requestCode}`;
     if (sessionToken) loadRequest();
   };
 
