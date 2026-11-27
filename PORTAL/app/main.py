@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -8,14 +7,11 @@ from fastapi.staticfiles import StaticFiles
 
 APP_DIR = Path(__file__).resolve().parent
 STATIC_DIR = APP_DIR / "static"
-ROOT_PATH = os.getenv("DOCUMENTOS_PORTAL_ROOT_PATH", "/documentosterceros")
-
 app = FastAPI(
     title="Portal de documentos de terceros",
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
-    root_path=ROOT_PATH,
 )
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
