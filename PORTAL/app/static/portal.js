@@ -254,7 +254,7 @@
     $('authorization-form').addEventListener('submit', event => {
       event.preventDefault();
       $('authorization-dialog').close();
-      setStatus('request-status', 'Vista previa: la autorización no fue guardada.', 'success');
+      setStatus('request-status', 'Vista previa: el formulario fue diligenciado, pero no se guardó.', 'success');
     });
 
     if (previewMode) {
