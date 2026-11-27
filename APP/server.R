@@ -9,7 +9,7 @@ function(input, output, session) {
   })
   grupo <- reactive({
     valor <- session$groups
-    if (is.null(valor) || !length(valor)) return(character())
+    if (is.null(valor) || !length(valor)) return("ANALÍTICA")
     unique(stringr::str_to_upper(trimws(as.character(valor))))
   })
 
