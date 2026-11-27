@@ -21,8 +21,8 @@
               racafeInputText("correo", "Correo electrónico", type = "email", required = TRUE, ns = ns),
               racafeInputText("celular", "Celular", type = "tel", ns = ns)
             ),
-            racafeInputSelect("documentos", "Documentos a incluir", choices = .SOL_DOCUMENTOS,
-                              selected = unname(.SOL_DOCUMENTOS), multiple = TRUE, empty = FALSE,
+            racafeInputSelect("documentos", "Documentos a incluir", choices = .sol_requisitos_disponibles(),
+                              selected = unname(.sol_requisitos_disponibles()), multiple = TRUE, empty = FALSE,
                               gender = "m", ns = ns),
             racafeInputNumeric("vigencia_dias", "Vigencia del enlace en días", value = DOCUMENTOS_VIGENCIA_DIAS,
                                format = "integer", min = 1, max = 30, ns = ns),
