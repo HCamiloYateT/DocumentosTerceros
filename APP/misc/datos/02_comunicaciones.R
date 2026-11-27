@@ -3,7 +3,7 @@ ConstruirEnlaceSolicitud <- function(codigo_solicitud) {
   codigo_solicitud <- .ValidarCodigoRuta(codigo_solicitud, "código de solicitud")
   base <- Sys.getenv(
     "DOCUMENTOS_PUBLIC_BASE_URL",
-    unset = "https://analitica.racafe.com/DocumentosTerceros/"
+    unset = "https://analitica.racafe.com/documentosterceros/"
   )
   base <- sub("/+$", "", trimws(base))
   if (!grepl("^https://", base, ignore.case = TRUE)) {
