@@ -63,6 +63,26 @@ ListarCatalogoFormularios <- function() {
   catalogo
 }
 
+ListarRequisitosDisponibles <- function() {
+  formularios <- ListarCatalogoFormularios()
+  activos <- formularios[vapply(formularios, function(x) isTRUE(x$activo), logical(1))]
+  catalogo_formularios <- if (length(activos)) {
+    tibble::tibble(
+      CodigoRequisito = vapply(activos, `[[`, character(1), "codigo"),
+      TipoRequisito = "FORMULARIO",
+      NombreRequisito = vapply(activos, `[[`, character(1), "nombre"),
+      Obligatorio = TRUE,
+      RequiereFirma = TRUE
+    )
+  } else {
+    .REQUISITOS_BASE[0, , drop = FALSE]
+  }
+  dplyr::bind_rows(
+    dplyr::filter(.REQUISITOS_BASE, TipoRequisito != "FORMULARIO"),
+    catalogo_formularios
+  )
+}
+
 ObtenerFormularioCatalogo <- function(codigo) {
   codigo <- .ValidarCodigoRuta(codigo, "código de formulario")
   formulario <- ListarCatalogoFormularios()[[codigo]]
