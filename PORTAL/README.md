@@ -17,13 +17,24 @@ una validación OTP enviada al correo registrado.
 Los endpoints de negocio todavía no están implementados. La interfaz presenta el error real de la API y no concede
 acceso cuando el servicio OTP no está disponible.
 
-## Ejecución local
+## Ejecución en OEAPP
+
+El servidor dispone de un entorno global de Python 3.10 con las dependencias necesarias. No se deben crear entornos
+virtuales ni instalar paquetes desde este proyecto. `requirements.txt` se conserva únicamente como manifiesto de
+dependencias.
+
+Verificación del entorno global:
 
 ```bash
-cd PORTAL
-python -m venv .venv
-.venv/bin/pip install -r requirements.txt
-DOCUMENTOS_PORTAL_ROOT_PATH="" .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8018
+/usr/local/bin/python3.10 -c "import fastapi, uvicorn; print(fastapi.__version__, uvicorn.__version__)"
+```
+
+Ejecución:
+
+```bash
+cd /home/compartido/APP/4_ControlInterno/DocumentosTerceros/PORTAL
+DOCUMENTOS_PORTAL_ROOT_PATH="" /usr/local/bin/python3.10 -m uvicorn app.main:app \
+  --host 127.0.0.1 --port 8019
 ```
 
 ## Contrato API v1
