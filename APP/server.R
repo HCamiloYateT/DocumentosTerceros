@@ -41,4 +41,5 @@ function(input, output, session) {
   # Módulos ----
   InicioServer("inicio", recarga, usuario, grupo)
   SolicitudesServer("solicitudes", usuario, recarga)
+  FormulariosServer("formularios", usuario, recarga)
 }
