@@ -33,13 +33,13 @@ Ejecución:
 
 ```bash
 cd /home/compartido/APP/4_ControlInterno/DocumentosTerceros/PORTAL
-DOCUMENTOS_PORTAL_ROOT_PATH="" /usr/local/bin/python3.10 -m uvicorn app.main:app \
+DOCUMENTOS_PORTAL_ROOT_PATH="/documentosterceros" /usr/local/bin/python3.10 -m uvicorn app.main:app \
   --host 127.0.0.1 --port 8019
 ```
 
 ## Contrato API v1
 
-Todas las rutas se publican debajo de `/firma/api`. Salvo la solicitud inicial del OTP, requieren:
+Todas las rutas se publican debajo de `/documentosterceros/api`. Salvo la solicitud inicial del OTP, requieren:
 
 ```http
 Authorization: Bearer <session_token>
@@ -114,5 +114,6 @@ registrarse en la auditoría de la solicitud.
 ## Integración pendiente
 
 El portal Python no modificará directamente los RDS. La siguiente fase debe implementar una API interna que sea la
-única escritora del expediente o migrar el contrato interoperable a JSON. Nginx continuará exponiendo `/firma/` y
-solo se cambiará el upstream después de validar OTP, cargas, firma, auditoría y límites de archivos.
+única escritora del expediente o migrar el contrato interoperable a JSON. Nginx expondrá
+`/documentosterceros/`; el upstream definitivo solo debe activarse después de validar OTP, cargas, firma, auditoría
+y límites de archivos.
