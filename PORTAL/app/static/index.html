@@ -215,16 +215,11 @@
       </p>
 
       <div class="authorization-summary">
-        <div><span>Nombre o razón social</span><strong>Empresa de ejemplo S.A.S.</strong></div>
-        <div><span>Identificación</span><strong>NIT 900123456</strong></div>
+        <div><span>Nombre o razón social</span><strong id="authorization-name">—</strong></div>
+        <div><span>Identificación</span><strong id="authorization-identification">—</strong></div>
       </div>
 
-      <fieldset class="authorization-options">
-        <legend>Finalidades de la autorización</legend>
-        <label><input type="checkbox" checked> Validar la información suministrada para la creación del tercero.</label>
-        <label><input type="checkbox" checked> Consultar fuentes públicas y listas de control aplicables.</label>
-        <label><input type="checkbox"> Recibir comunicaciones relacionadas con la relación comercial.</label>
-      </fieldset>
+      <div id="authorization-fields" class="authorization-options"></div>
 
       <div class="dialog-actions">
         <button id="cancel-authorization" class="button button-secondary" type="button">Volver</button>
