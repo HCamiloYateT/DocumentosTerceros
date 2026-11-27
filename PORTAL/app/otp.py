@@ -155,6 +155,8 @@ def _bridge_http(error: BridgeError) -> HTTPException:
         return HTTPException(status_code=404, detail="La solicitud no está disponible.")
     if error.code == "EMAIL_FAILED":
         return HTTPException(status_code=503, detail="No fue posible enviar el código de verificación.")
+    if error.code == "FORM_NOT_AVAILABLE":
+        return HTTPException(status_code=404, detail="El formulario no está disponible para esta solicitud.")
     return HTTPException(status_code=503, detail="No fue posible validar la solicitud.")
 
 
