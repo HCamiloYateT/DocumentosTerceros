@@ -140,7 +140,7 @@
 
         <div class="form-list">
           <article class="form-item" data-requirement="FORM_HABEAS">
-            <div class="form-icon" aria-hidden="true">03</div>
+            <div class="step-number" aria-hidden="true">03</div>
             <div class="form-copy">
               <div class="form-title-line">
                 <h3>Autorización de tratamiento de datos</h3>
@@ -165,9 +165,21 @@
         </div>
 
         <div class="card shared-signature-card">
-          <div class="signature-preview" aria-label="Área de firma">
-            <span>Firme dentro de este recuadro</span>
-            <small>La captura táctil se habilitará en la integración funcional.</small>
+          <div class="signature-pad">
+            <canvas id="signature-canvas" class="signature-canvas"
+                    aria-label="Área para firmar con el mouse, lápiz o dedo"></canvas>
+            <div id="signature-placeholder" class="signature-placeholder" aria-hidden="true">
+              <span>Firme dentro de este recuadro</span>
+              <small>Use el mouse, un lápiz digital o el dedo.</small>
+            </div>
+          </div>
+          <div class="signature-toolbar">
+            <span id="signature-status" class="signature-status" role="status" aria-live="polite">
+              Firma pendiente
+            </span>
+            <button id="clear-signature" class="button button-secondary" type="button" disabled>
+              Limpiar firma
+            </button>
           </div>
           <label class="acceptance-check">
             <input type="checkbox">
